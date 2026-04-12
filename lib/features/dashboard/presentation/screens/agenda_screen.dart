@@ -208,10 +208,19 @@ class _AgendaScreenState extends State<AgendaScreen> {
   Widget _buildSmallPaymentBadge(String method) {
     Color color;
     switch (method.toLowerCase()) {
-      case 'mercadopago': color = Colors.blue; break;
-      case 'presencial': color = Colors.orange; break;
-      case 'interno': color = AppColors.primary; break;
-      default: color = AppColors.onSurfaceVariant;
+      case 'mercadopago':
+        color = Colors.blue;
+        break;
+      case 'presential':
+      case 'presencial':
+        color = Colors.orange;
+        break;
+      case 'internal':
+      case 'interno':
+        color = AppColors.primary;
+        break;
+      default:
+        color = AppColors.onSurfaceVariant;
     }
 
     return Container(

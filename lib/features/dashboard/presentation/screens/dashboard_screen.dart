@@ -25,25 +25,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     context.read<DashboardBloc>().add(LoadDashboardData());
   }
 
-  String _formatBookingDate(dynamic date) {
-    if (date == null) return '';
-    if (date is DateTime) return DateFormat('dd-MM-yyyy').format(date);
-    if (date is String) {
-      try {
-        return DateFormat('dd-MM-yyyy').format(DateTime.parse(date));
-      } catch (_) {
-        return date;
-      }
-    }
-    return date.toString();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(
-      symbol: r'$',
-      decimalDigits: 0,
-    );
+    final currencyFormat = NumberFormat.currency(symbol: r'$', decimalDigits: 0);
 
     return Scaffold(
       body: SafeArea(
@@ -58,9 +42,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   context.read<DashboardBloc>().add(LoadDashboardData());
                 },
                 child: CustomScrollView(
-                  physics: const BouncingScrollPhysics(
-                    parent: AlwaysScrollableScrollPhysics(),
-                  ),
+                  physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                   slivers: [
                     SliverPadding(
                       padding: const EdgeInsets.all(24.0),
@@ -75,25 +57,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   userIdentifier = authState.user.email;
                                 }
                                 return Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             'Bienvenido,',
-                                            style: Theme.of(
-                                              context,
-                                            ).textTheme.labelMedium,
+                                            style: Theme.of(context).textTheme.labelMedium,
                                           ),
                                           Text(
                                             userIdentifier,
-                                            style: Theme.of(
-                                              context,
-                                            ).textTheme.headlineSmall,
+                                            style: Theme.of(context).textTheme.headlineSmall,
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ],
@@ -101,10 +77,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     ),
                                     const CircleAvatar(
                                       backgroundColor: AppColors.surfaceHighest,
-                                      child: Icon(
-                                        Icons.person,
-                                        color: AppColors.primary,
-                                      ),
+                                      child: Icon(Icons.person, color: AppColors.primary),
                                     ),
                                   ],
                                 );
@@ -121,9 +94,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 Expanded(
                                   child: _StatCard(
                                     title: 'Ventas Hoy',
-                                    value: currencyFormat.format(
-                                      data.todayRevenue,
-                                    ),
+                                    value: currencyFormat.format(data.todayRevenue),
                                     color: AppColors.primary,
                                   ),
                                 ),
@@ -147,157 +118,125 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                     SliverList(
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                        final booking = data.recentBookings[index];
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24.0,
-                            vertical: 8.0,
-                          ),
-                          child: TonalCard(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      width: 48,
-                                      height: 48,
-                                      decoration: BoxDecoration(
-                                        color: AppColors.surfaceHighest,
-                                        borderRadius: BorderRadius.circular(12),
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final booking = data.recentBookings[index];
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                            child: TonalCard(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        width: 48,
+                                        height: 48,
+                                        decoration: BoxDecoration(
+                                          color: AppColors.surfaceHighest,
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: const Icon(
+                                          Icons.person,
+                                          color: AppColors.primary,
+                                        ),
                                       ),
-                                      child: Icon(
-                                        Icons.person,
-                                        color: booking.status == 'confirmed'
-                                            ? AppColors.primary
-                                            : AppColors.onSurfaceVariant,
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              booking.customerName,
+                                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            GestureDetector(
+                                              onTap: () async {
+                                                final Uri launchUri = Uri(
+                                                  scheme: 'tel',
+                                                  path: booking.customerPhone,
+                                                );
+                                                if (await canLaunchUrl(launchUri)) {
+                                                  await launchUrl(launchUri);
+                                                }
+                                              },
+                                              child: Text(
+                                                booking.customerPhone,
+                                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                                      color: AppColors.primary,
+                                                      decoration: TextDecoration.underline,
+                                                    ),
+                                              ),
+                                            ),
+                                            if (booking.customerEmail.isNotEmpty)
+                                              Text(
+                                                booking.customerEmail,
+                                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                                      color: AppColors.onSurfaceVariant,
+                                                    ),
+                                              ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.end,
                                         children: [
                                           Text(
-                                            booking.customerName,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodyLarge
-                                                ?.copyWith(
+                                            currencyFormat.format(booking.price),
+                                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                                   fontWeight: FontWeight.bold,
+                                                  color: AppColors.primary,
                                                 ),
                                           ),
-                                          const SizedBox(height: 4),
-                                          GestureDetector(
-                                            onTap: () async {
-                                              final Uri launchUri = Uri(
-                                                scheme: 'tel',
-                                                path: booking.customerPhone,
-                                              );
-                                              if (await canLaunchUrl(
-                                                launchUri,
-                                              )) {
-                                                await launchUrl(launchUri);
-                                              }
-                                            },
-                                            child: Text(
-                                              booking.customerPhone,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodySmall
-                                                  ?.copyWith(
-                                                    color: AppColors.primary,
-                                                    decoration: TextDecoration
-                                                        .underline,
-                                                  ),
-                                            ),
+                                          Text(
+                                            booking.bookingCode,
+                                            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                                                  fontSize: 10,
+                                                ),
                                           ),
-                                          if (booking.customerEmail.isNotEmpty)
-                                            Text(
-                                              booking.customerEmail,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodySmall
-                                                  ?.copyWith(
-                                                    color: AppColors
-                                                        .onSurfaceVariant,
-                                                  ),
-                                            ),
                                         ],
                                       ),
-                                    ),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      children: [
-                                        Text(
-                                          currencyFormat.format(booking.price),
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.bold,
-                                                color: AppColors.primary,
-                                              ),
-                                        ),
-                                        Text(
-                                          booking.bookingCode,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .labelMedium
-                                              ?.copyWith(fontSize: 10),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-                                const Divider(
-                                  color: AppColors.surfaceHighest,
-                                  height: 1,
-                                ),
-                                const SizedBox(height: 12),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.calendar_today,
-                                          size: 14,
-                                          color: AppColors.onSurfaceVariant,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          '${_formatBookingDate(booking.date)} • ${booking.hour}:00',
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.labelMedium,
-                                        ),
-                                      ],
-                                    ),
-                                    _buildPaymentBadge(booking.paymentMethod),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  booking.courtName,
-                                  style: Theme.of(context).textTheme.labelMedium
-                                      ?.copyWith(
-                                        color: AppColors.onSurface,
-                                        fontWeight: FontWeight.w600,
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  const Divider(color: AppColors.surfaceHighest, height: 1),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.calendar_today, size: 14, color: AppColors.onSurfaceVariant),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            '${booking.date} • ${booking.hour}:00',
+                                            style: Theme.of(context).textTheme.labelMedium,
+                                          ),
+                                        ],
                                       ),
-                                ),
-                              ],
+                                      _buildPaymentBadge(booking.paymentMethod),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Cancha: ${booking.courtName}',
+                                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                                          color: AppColors.onSurface,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      }, childCount: data.recentBookings.length),
+                          );
+                        },
+                        childCount: data.recentBookings.length,
+                      ),
                     ),
                     const SliverToBoxAdapter(child: SizedBox(height: 100)),
                   ],
@@ -321,12 +260,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     switch (method.toLowerCase()) {
       case 'mercadopago':
         color = Colors.blue;
-        text = 'MercadoPago';
+        text = 'Mercado Pago';
         break;
+      case 'presential':
       case 'presencial':
         color = Colors.orange;
         text = 'Presencial';
         break;
+      case 'internal':
       case 'interno':
         color = AppColors.primary;
         text = 'Interno';
@@ -345,11 +286,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       child: Text(
         text,
-        style: TextStyle(
-          color: color,
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-        ),
+        style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -360,11 +297,7 @@ class _StatCard extends StatelessWidget {
   final String value;
   final Color color;
 
-  const _StatCard({
-    required this.title,
-    required this.value,
-    required this.color,
-  });
+  const _StatCard({required this.title, required this.value, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -377,9 +310,9 @@ class _StatCard extends StatelessWidget {
           Text(
             value,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: color,
-              fontWeight: FontWeight.bold,
-            ),
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
           ),
         ],
       ),
