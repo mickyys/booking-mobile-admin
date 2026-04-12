@@ -23,6 +23,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         scopes: {'openid', 'profile', 'email'},
       );
 
+      print('token: ${credentials.accessToken}');
+
       return UserModel(
         id: credentials.user.sub,
         email: credentials.user.email ?? email,

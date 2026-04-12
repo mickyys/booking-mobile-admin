@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Configuration Variables
-AUTH0_DOMAIN="dev-8obo6dl4.us.auth0.com"
+AUTH0_DOMAIN="auth.reservaloya.cl"
 AUTH0_CLIENT_ID="gSv4eupv6F0eRjctmIKrCNzK7Z535Xp9"
-AUTH0_AUDIENCE="https://api.reservaloya.cl"
+AUTH0_AUDIENCE="https://dev-8obo6dl4.us.auth0.com/api/v2/"
 
 echo "Running ReservaloYA Admin with environment variables..."
 echo "Domain: $AUTH0_DOMAIN"
