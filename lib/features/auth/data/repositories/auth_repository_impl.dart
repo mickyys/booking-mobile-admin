@@ -15,13 +15,13 @@ class AuthRepositoryImpl implements AuthRepository {
   });
 
   @override
-  Future<Either<Failure, User>> login() async {
+  Future<Either<Failure, User>> login(String email, String password) async {
     try {
-      final user = await remoteDataSource.login();
+      final user = await remoteDataSource.login(email, password);
       await sharedPreferences.setString('jwt_token', user.token);
       return Right(user);
     } catch (e) {
-      return const Left(ServerFailure('Error al iniciar sesión con Auth0.'));
+      return const Left(ServerFailure('Credenciales inválidas o error de conexión.'));
     }
   }
 

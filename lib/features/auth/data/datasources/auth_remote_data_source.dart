@@ -2,7 +2,7 @@ import 'package:auth0_flutter/auth0_flutter.dart';
 import '../models/user_model.dart';
 
 abstract class AuthRemoteDataSource {
-  Future<UserModel> login();
+  Future<UserModel> login(String email, String password);
   Future<void> logout();
 }
 
@@ -12,26 +12,26 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   AuthRemoteDataSourceImpl({required this.auth0});
 
   @override
-  Future<UserModel> login() async {
+  Future<UserModel> login(String email, String password) async {
     try {
-      final credentials = await auth0.webAuthentication(scheme: 'demo').login();
+      // Corrected parameters for auth0.api.login based on analyzer errors
+      final credentials = await auth0.api.login(
+        usernameOrEmail: email,
+        password: password,
+        connectionOrRealm: 'Username-Password-Authentication',
+      );
 
       return UserModel(
         id: credentials.user.sub,
-        email: credentials.user.email ?? '',
+        email: credentials.user.email ?? email,
         token: credentials.accessToken,
       );
     } catch (e) {
-      throw Exception('Login with Auth0 failed: $e');
+      throw Exception('Login with credentials failed: $e');
     }
   }
 
   @override
   Future<void> logout() async {
-    try {
-      await auth0.webAuthentication(scheme: 'demo').logout();
-    } catch (e) {
-      throw Exception('Logout with Auth0 failed: $e');
-    }
   }
 }
