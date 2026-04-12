@@ -24,16 +24,22 @@ android {
         applicationId = "cl.reservaloya.reservaloya_admin"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        minSdk = 21 // auth0_flutter requires minSdk 21
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+<<<<<<< HEAD
         manifestPlaceholders.putAll(
             mapOf(
                 "auth0Domain" to "dev-8obo6dl4.us.auth0.com",
                 "auth0Scheme" to "https"
             )
         )
+=======
+
+        manifestPlaceholders["auth0Domain"] = "dev-8obo6dl4.us.auth0.com"
+        manifestPlaceholders["auth0Scheme"] = "demo"
+>>>>>>> 03ebf6e3dc618e58397ac029557d805057764fa8
     }
 
     buildTypes {
