@@ -28,6 +28,7 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  url_launcher: ^6.3.1
   flutter:
     sdk: flutter
 
@@ -46,6 +47,7 @@ dependencies:
   auth0_flutter: ^2.0.0
 
 dev_dependencies:
+  url_launcher: ^6.3.1
   flutter_test:
     sdk: flutter
 

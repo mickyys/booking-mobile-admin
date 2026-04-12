@@ -4,6 +4,7 @@ class Booking extends Equatable {
   final String id;
   final String customerName;
   final String customerPhone;
+  final String customerEmail;
   final String bookingCode;
   final String date;
   final int hour;
@@ -16,6 +17,7 @@ class Booking extends Equatable {
     required this.id,
     required this.customerName,
     required this.customerPhone,
+    required this.customerEmail,
     required this.bookingCode,
     required this.date,
     required this.hour,
@@ -30,6 +32,7 @@ class Booking extends Equatable {
         id,
         customerName,
         customerPhone,
+        customerEmail,
         bookingCode,
         date,
         hour,
