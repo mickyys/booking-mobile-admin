@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:auth0_flutter/auth0_flutter.dart';
 import 'core/utils/auth_interceptor.dart';
+import 'core/config/app_config.dart';
 
 // Auth
 import 'features/auth/data/datasources/auth_remote_data_source.dart';
@@ -36,8 +37,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => dio);
 
   sl.registerLazySingleton(
-    () =>
-        Auth0('dev-8obo6dl4.us.auth0.com', 'gSv4eupv6F0eRjctmIKrCNzK7Z535Xp9'),
+    () => Auth0(AppConfig.auth0Domain, AppConfig.auth0ClientId),
   );
 
   //! Features
