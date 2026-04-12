@@ -7,6 +7,9 @@ abstract class DashboardRemoteDataSource {
   Future<DashboardDataModel> getDashboardData();
   Future<List<CourtScheduleModel>> getAgenda(String sportCenterId, String date);
   Future<List<AdminSportCenterCourtsModel>> getAdminCourts();
+  Future<AdminCourtModel> addCourt(String sportCenterId, String name, String description);
+  Future<void> updateCourt(String courtId, String name, String description);
+  Future<void> deleteCourt(String courtId);
 }
 
 class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
@@ -17,46 +20,26 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
   @override
   Future<DashboardDataModel> getDashboardData() async {
     try {
-      print('DashboardRemoteDataSource: Fetching dashboard data...');
       final response = await dio.get('/admin/dashboard');
       if (response.statusCode == 200) {
-        print('DashboardRemoteDataSource: Data fetched successfully');
         return DashboardDataModel.fromJson(response.data);
       } else {
-        print(
-          'DashboardRemoteDataSource: Failed with status ${response.statusCode}',
-        );
-        throw Exception(
-          'Failed to load dashboard data: ${response.statusCode}',
-        );
+        throw Exception('Failed to load dashboard data: ${response.statusCode}');
       }
-    } on DioException catch (e) {
-      print('DashboardRemoteDataSource: DioException - ${e.message}');
-      rethrow;
     } catch (e) {
-      print('DashboardRemoteDataSource: Unexpected error - $e');
       rethrow;
     }
   }
 
   @override
-  Future<List<CourtScheduleModel>> getAgenda(
-    String sportCenterId,
-    String date,
-  ) async {
+  Future<List<CourtScheduleModel>> getAgenda(String sportCenterId, String date) async {
     try {
-      print(
-        'DashboardRemoteDataSource: Fetching agenda for SportCenter $sportCenterId on $date...',
-      );
       final response = await dio.get(
         '/sport-centers/$sportCenterId/schedules/bookings',
         queryParameters: {'date': date, 'all': true},
       );
       if (response.statusCode == 200) {
-        print('AGENDA RAW DATA: ${response.data}');
         final List rawList = response.data as List;
-        // The endpoint returns a list of courts directly according to the docs,
-        // but if it's wrapped like the example provided for /admin/courts, handle it.
         if (rawList.isNotEmpty &&
             rawList.first is Map &&
             rawList.first.containsKey('courts')) {
@@ -66,13 +49,9 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
         }
         return rawList.map((e) => CourtScheduleModel.fromJson(e)).toList();
       } else {
-        print(
-          'DashboardRemoteDataSource: Failed to load agenda with status ${response.statusCode}',
-        );
         throw Exception('Failed to load agenda: ${response.statusCode}');
       }
     } catch (e) {
-      print('DashboardRemoteDataSource: Error fetching agenda - $e');
       rethrow;
     }
   }
@@ -80,7 +59,6 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
   @override
   Future<List<AdminSportCenterCourtsModel>> getAdminCourts() async {
     try {
-      print('DashboardRemoteDataSource: Fetching admin courts...');
       final response = await dio.get('/admin/courts');
       if (response.statusCode == 200) {
         return (response.data as List)
@@ -90,7 +68,51 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
         throw Exception('Failed to load admin courts: ${response.statusCode}');
       }
     } catch (e) {
-      print('DashboardRemoteDataSource: Error fetching admin courts - $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<AdminCourtModel> addCourt(String sportCenterId, String name, String description) async {
+    try {
+      final response = await dio.post('/admin/courts', data: {
+        'sport_center_id': sportCenterId,
+        'name': name,
+        'description': description,
+      });
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return AdminCourtModel.fromJson(response.data);
+      } else {
+        throw Exception('Failed to add court: ${response.statusCode}');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> updateCourt(String courtId, String name, String description) async {
+    try {
+      final response = await dio.put('/admin/courts/$courtId', data: {
+        'name': name,
+        'description': description,
+      });
+      if (response.statusCode != 200) {
+        throw Exception('Failed to update court: ${response.statusCode}');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> deleteCourt(String courtId) async {
+    try {
+      final response = await dio.delete('/admin/courts/$courtId');
+      if (response.statusCode != 200) {
+        throw Exception('Failed to delete court: ${response.statusCode}');
+      }
+    } catch (e) {
       rethrow;
     }
   }

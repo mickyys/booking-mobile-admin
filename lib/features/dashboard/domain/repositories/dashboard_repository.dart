@@ -8,4 +8,7 @@ abstract class DashboardRepository {
   Future<Either<Failure, DashboardData>> getDashboardData();
   Future<Either<Failure, List<CourtSchedule>>> getAgenda(String sportCenterId, String date);
   Future<Either<Failure, List<AdminSportCenterCourts>>> getAdminCourts();
+  Future<Either<Failure, AdminCourt>> addCourt(String sportCenterId, String name, String description);
+  Future<Either<Failure, Unit>> updateCourt(String courtId, String name, String description);
+  Future<Either<Failure, Unit>> deleteCourt(String courtId);
 }

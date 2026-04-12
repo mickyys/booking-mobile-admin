@@ -16,38 +16,169 @@ class CourtsScreen extends StatefulWidget {
 }
 
 class _CourtsScreenState extends State<CourtsScreen> {
+  String? _currentSportCenterId;
+
   @override
   void initState() {
     super.initState();
     context.read<AgendaBloc>().add(LoadAdminCourts());
   }
 
+  void _showAddCourtDialog() {
+    if (_currentSportCenterId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error: No se ha seleccionado un centro deportivo')),
+      );
+      return;
+    }
+
+    final nameController = TextEditingController();
+    final descController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surfaceHigh,
+        title: Text('Nueva Cancha', style: GoogleFonts.manrope(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(labelText: 'Nombre', labelStyle: TextStyle(color: AppColors.onSurfaceVariant)),
+            ),
+            TextField(
+              controller: descController,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(labelText: 'Descripción', labelStyle: TextStyle(color: AppColors.onSurfaceVariant)),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+          ElevatedButton(
+            onPressed: () {
+              context.read<AgendaBloc>().add(AddCourt(
+                    sportCenterId: _currentSportCenterId!,
+                    name: nameController.text,
+                    description: descController.text,
+                  ));
+              Navigator.pop(context);
+            },
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditCourtDialog(AdminCourt court) {
+    final nameController = TextEditingController(text: court.name);
+    final descController = TextEditingController(text: court.description);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surfaceHigh,
+        title: Text('Editar Cancha', style: GoogleFonts.manrope(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(labelText: 'Nombre', labelStyle: TextStyle(color: AppColors.onSurfaceVariant)),
+            ),
+            TextField(
+              controller: descController,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(labelText: 'Descripción', labelStyle: TextStyle(color: AppColors.onSurfaceVariant)),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+          ElevatedButton(
+            onPressed: () {
+              context.read<AgendaBloc>().add(UpdateCourtEvent(
+                    courtId: court.id,
+                    name: nameController.text,
+                    description: descController.text,
+                  ));
+              Navigator.pop(context);
+            },
+            child: const Text('Actualizar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteConfirmDialog(AdminCourt court) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surfaceHigh,
+        title: Text('Eliminar Cancha', style: GoogleFonts.manrope(color: Colors.white)),
+        content: Text('¿Estás seguro de que deseas eliminar la cancha "${court.name}"?', style: const TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () {
+              context.read<AgendaBloc>().add(DeleteCourtEvent(courtId: court.id));
+              Navigator.pop(context);
+            },
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: BlocBuilder<AgendaBloc, AgendaState>(
-          builder: (context, state) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeader(),
-                _buildSearchBar(),
-                Expanded(
-                  child: _buildBody(state),
-                ),
-              ],
-            );
-          },
+    return BlocListener<AgendaBloc, AgendaState>(
+      listener: (context, state) {
+        if (state is CourtActionSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message), backgroundColor: AppColors.primary, behavior: SnackBarBehavior.floating),
+          );
+        } else if (state is AgendaError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message), backgroundColor: AppColors.error),
+          );
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: BlocBuilder<AgendaBloc, AgendaState>(
+            builder: (context, state) {
+              if (state is AdminCourtsLoaded && state.adminCourts.isNotEmpty) {
+                _currentSportCenterId = state.adminCourts.first.sportCenter.id;
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(),
+                  _buildSearchBar(),
+                  Expanded(
+                    child: _buildBody(state),
+                  ),
+                ],
+              );
+            },
+          ),
         ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: _showAddCourtDialog,
+          backgroundColor: AppColors.primary,
+          child: const Icon(Icons.add, color: AppColors.onPrimary),
+        ),
+        bottomNavigationBar: const AppNavigationBar(currentPath: '/courts'),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: AppColors.primary,
-        child: const Icon(Icons.add, color: AppColors.onPrimary),
-      ),
-      bottomNavigationBar: const AppNavigationBar(currentPath: '/courts'),
     );
   }
 
@@ -107,12 +238,21 @@ class _CourtsScreenState extends State<CourtsScreen> {
     } else if (state is AdminCourtsLoaded) {
       final courts = state.adminCourts.isNotEmpty ? state.adminCourts.first.courts : <AdminCourt>[];
       return _buildCourtList(courts);
-    } else if (state is AgendaLoaded) {
-       // If we came from agenda, we might need to reload or just use what we have if we had a way to store it.
-       // For simplicity in this demo, let's just show a refresh button if not loaded.
-       return _buildCourtList([]);
+    } else if (state is AgendaLoaded || state is CourtActionSuccess) {
+       // If data was already loaded or action was success, we stay in this state but
+       // AdminCourtsLoaded is re-emitted by the bloc after CRUD actions.
+       // Let's ensure we show a loader if nothing is ready.
+       return const Center(child: CircularProgressIndicator(color: AppColors.primary));
     } else if (state is AgendaError) {
-      return Center(child: Text(state.message, style: const TextStyle(color: AppColors.error)));
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(state.message, style: const TextStyle(color: AppColors.error)),
+            ElevatedButton(onPressed: () => context.read<AgendaBloc>().add(LoadAdminCourts()), child: const Text('Reintentar')),
+          ],
+        ),
+      );
     }
     return const Center(child: CircularProgressIndicator(color: AppColors.primary));
   }
@@ -176,33 +316,9 @@ class _CourtsScreenState extends State<CourtsScreen> {
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1B2634),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'ONLINE',
-                      style: GoogleFonts.inter(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ],
-                ),
+              IconButton(
+                icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 20),
+                onPressed: () => _showDeleteConfirmDialog(court),
               ),
             ],
           ),
@@ -220,7 +336,7 @@ class _CourtsScreenState extends State<CourtsScreen> {
                 ],
               ),
               TextButton.icon(
-                onPressed: () {},
+                onPressed: () => _showEditCourtDialog(court),
                 icon: const Icon(Icons.edit_outlined, size: 18, color: AppColors.primary),
                 label: Text(
                   'Editar',
