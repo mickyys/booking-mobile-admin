@@ -10,6 +10,8 @@ abstract class DashboardRemoteDataSource {
   Future<AdminCourtModel> addCourt(String sportCenterId, String name, String description);
   Future<void> updateCourt(String courtId, String name, String description);
   Future<void> deleteCourt(String courtId);
+  Future<BookingModel> createInternalBooking(Map<String, dynamic> bookingData);
+  Future<void> cancelBooking(String bookingId);
 }
 
 class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
@@ -111,6 +113,32 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
       final response = await dio.delete('/admin/courts/$courtId');
       if (response.statusCode != 200) {
         throw Exception('Failed to delete court: ${response.statusCode}');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<BookingModel> createInternalBooking(Map<String, dynamic> bookingData) async {
+    try {
+      final response = await dio.post('/admin/bookings/internal', data: bookingData);
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return BookingModel.fromJson(response.data);
+      } else {
+        throw Exception('Failed to create booking: ${response.statusCode}');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> cancelBooking(String bookingId) async {
+    try {
+      final response = await dio.post('/bookings/$bookingId/cancel');
+      if (response.statusCode != 200) {
+        throw Exception('Failed to cancel booking: ${response.statusCode}');
       }
     } catch (e) {
       rethrow;

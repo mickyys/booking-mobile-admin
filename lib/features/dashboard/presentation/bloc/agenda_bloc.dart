@@ -5,6 +5,8 @@ import '../../domain/usecases/get_admin_courts_usecase.dart';
 import '../../domain/usecases/add_court_usecase.dart';
 import '../../domain/usecases/update_court_usecase.dart';
 import '../../domain/usecases/delete_court_usecase.dart';
+import '../../domain/usecases/create_internal_booking_usecase.dart';
+import '../../domain/usecases/cancel_booking_usecase.dart';
 import 'agenda_event.dart';
 import 'agenda_state.dart';
 
@@ -14,6 +16,8 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
   final AddCourtUseCase addCourtUseCase;
   final UpdateCourtUseCase updateCourtUseCase;
   final DeleteCourtUseCase deleteCourtUseCase;
+  final CreateInternalBookingUseCase createInternalBookingUseCase;
+  final CancelBookingUseCase cancelBookingUseCase;
 
   AgendaBloc({
     required this.getAgendaUseCase,
@@ -21,12 +25,16 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
     required this.addCourtUseCase,
     required this.updateCourtUseCase,
     required this.deleteCourtUseCase,
+    required this.createInternalBookingUseCase,
+    required this.cancelBookingUseCase,
   }) : super(AgendaInitial()) {
     on<LoadAdminCourts>(_onLoadAdminCourts);
     on<LoadAgendaData>(_onLoadAgendaData);
     on<AddCourt>(_onAddCourt);
     on<UpdateCourtEvent>(_onUpdateCourt);
     on<DeleteCourtEvent>(_onDeleteCourt);
+    on<CreateInternalBookingEvent>(_onCreateInternalBooking);
+    on<CancelBookingEvent>(_onCancelBooking);
   }
 
   Future<void> _onLoadAdminCourts(LoadAdminCourts event, Emitter<AgendaState> emit) async {
@@ -94,6 +102,33 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
       (_) {
         emit(const CourtActionSuccess(message: 'Cancha eliminada con éxito'));
         add(LoadAdminCourts());
+      },
+    );
+  }
+
+  Future<void> _onCreateInternalBooking(CreateInternalBookingEvent event, Emitter<AgendaState> emit) async {
+    emit(AgendaLoading());
+    final result = await createInternalBookingUseCase(event.bookingData);
+    result.fold(
+      (failure) => emit(AgendaError(message: failure.message)),
+      (_) {
+        emit(const CourtActionSuccess(message: 'Reserva creada con éxito'));
+        add(LoadAgendaData(
+          sportCenterId: event.bookingData['sport_center_id'],
+          date: event.bookingData['date'].toString().split('T')[0],
+        ));
+      },
+    );
+  }
+
+  Future<void> _onCancelBooking(CancelBookingEvent event, Emitter<AgendaState> emit) async {
+    emit(AgendaLoading());
+    final result = await cancelBookingUseCase(event.bookingId);
+    result.fold(
+      (failure) => emit(AgendaError(message: failure.message)),
+      (_) {
+        emit(const CourtActionSuccess(message: 'Reserva cancelada con éxito'));
+        add(LoadAgendaData(sportCenterId: event.sportCenterId, date: event.date));
       },
     );
   }

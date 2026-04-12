@@ -57,3 +57,27 @@ class DeleteCourtEvent extends AgendaEvent {
   @override
   List<Object> get props => [courtId];
 }
+
+class CreateInternalBookingEvent extends AgendaEvent {
+  final Map<String, dynamic> bookingData;
+
+  const CreateInternalBookingEvent({required this.bookingData});
+
+  @override
+  List<Object> get props => [bookingData];
+}
+
+class CancelBookingEvent extends AgendaEvent {
+  final String bookingId;
+  final String sportCenterId;
+  final String date;
+
+  const CancelBookingEvent({
+    required this.bookingId,
+    required this.sportCenterId,
+    required this.date,
+  });
+
+  @override
+  List<Object> get props => [bookingId, sportCenterId, date];
+}

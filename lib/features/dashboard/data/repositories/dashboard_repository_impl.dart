@@ -70,4 +70,24 @@ class DashboardRepositoryImpl implements DashboardRepository {
       return const Left(ServerFailure('Error al eliminar la cancha.'));
     }
   }
+
+  @override
+  Future<Either<Failure, Booking>> createInternalBooking(Map<String, dynamic> bookingData) async {
+    try {
+      final data = await remoteDataSource.createInternalBooking(bookingData);
+      return Right(data);
+    } catch (e) {
+      return const Left(ServerFailure('Error al crear la reserva interna.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> cancelBooking(String bookingId) async {
+    try {
+      await remoteDataSource.cancelBooking(bookingId);
+      return const Right(unit);
+    } catch (e) {
+      return const Left(ServerFailure('Error al cancelar la reserva.'));
+    }
+  }
 }

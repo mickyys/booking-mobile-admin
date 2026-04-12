@@ -11,4 +11,6 @@ abstract class DashboardRepository {
   Future<Either<Failure, AdminCourt>> addCourt(String sportCenterId, String name, String description);
   Future<Either<Failure, Unit>> updateCourt(String courtId, String name, String description);
   Future<Either<Failure, Unit>> deleteCourt(String courtId);
+  Future<Either<Failure, Booking>> createInternalBooking(Map<String, dynamic> bookingData);
+  Future<Either<Failure, Unit>> cancelBooking(String bookingId);
 }

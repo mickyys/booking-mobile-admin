@@ -22,6 +22,8 @@ import 'features/dashboard/domain/usecases/get_admin_courts_usecase.dart';
 import 'features/dashboard/domain/usecases/add_court_usecase.dart';
 import 'features/dashboard/domain/usecases/update_court_usecase.dart';
 import 'features/dashboard/domain/usecases/delete_court_usecase.dart';
+import 'features/dashboard/domain/usecases/create_internal_booking_usecase.dart';
+import 'features/dashboard/domain/usecases/cancel_booking_usecase.dart';
 import 'features/dashboard/presentation/bloc/dashboard_bloc.dart';
 import 'features/dashboard/presentation/bloc/agenda_bloc.dart';
 
@@ -65,6 +67,8 @@ Future<void> init() async {
         addCourtUseCase: sl(),
         updateCourtUseCase: sl(),
         deleteCourtUseCase: sl(),
+        createInternalBookingUseCase: sl(),
+        cancelBookingUseCase: sl(),
       ));
   sl.registerLazySingleton(() => GetDashboardDataUseCase(sl()));
   sl.registerLazySingleton(() => GetAgendaUseCase(sl()));
@@ -72,6 +76,8 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AddCourtUseCase(sl()));
   sl.registerLazySingleton(() => UpdateCourtUseCase(sl()));
   sl.registerLazySingleton(() => DeleteCourtUseCase(sl()));
+  sl.registerLazySingleton(() => CreateInternalBookingUseCase(sl()));
+  sl.registerLazySingleton(() => CancelBookingUseCase(sl()));
   sl.registerLazySingleton<DashboardRepository>(
     () => DashboardRepositoryImpl(remoteDataSource: sl()),
   );

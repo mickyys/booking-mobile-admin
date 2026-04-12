@@ -29,7 +29,6 @@ class _AgendaScreenState extends State<AgendaScreen> {
     super.initState();
     context.read<AgendaBloc>().add(LoadAdminCourts());
 
-    // Sync horizontal scrolls
     _horizontalBodyController.addListener(() {
       if (_horizontalHeaderController.hasClients) {
         _horizontalHeaderController.jumpTo(_horizontalBodyController.offset);
@@ -54,60 +53,185 @@ class _AgendaScreenState extends State<AgendaScreen> {
     }
   }
 
+  void _showInternalBookingDialog(TimeSlot slot, String courtId, String courtName) {
+    final nameController = TextEditingController();
+    final phoneController = TextEditingController();
+    final priceController = TextEditingController(text: slot.price.toInt().toString());
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surfaceHigh,
+        title: Text('Reserva Manual - $courtName', style: GoogleFonts.manrope(color: Colors.white, fontSize: 18)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Hora: ${slot.hour}:00', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            TextField(
+              controller: nameController,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(labelText: 'Nombre Cliente', labelStyle: TextStyle(color: AppColors.onSurfaceVariant)),
+            ),
+            TextField(
+              controller: phoneController,
+              keyboardType: TextInputType.phone,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(labelText: 'Teléfono', labelStyle: TextStyle(color: AppColors.onSurfaceVariant)),
+            ),
+            TextField(
+              controller: priceController,
+              keyboardType: TextInputType.number,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(labelText: 'Precio ($)', labelStyle: TextStyle(color: AppColors.onSurfaceVariant)),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+          ElevatedButton(
+            onPressed: () {
+              final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
+              context.read<AgendaBloc>().add(CreateInternalBookingEvent(
+                bookingData: {
+                  'court_id': courtId,
+                  'sport_center_id': _selectedSportCenterId,
+                  'date': '${dateStr}T00:00:00Z',
+                  'hour': slot.hour,
+                  'price': double.tryParse(priceController.text) ?? slot.price,
+                  'customer_name': nameController.text,
+                  'customer_phone': phoneController.text,
+                  'payment_method': 'internal',
+                },
+              ));
+              Navigator.pop(context);
+            },
+            child: const Text('Reservar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showBookingDetailsDialog(TimeSlot slot) {
+    final booking = slot.booking;
+    if (booking == null) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surfaceHigh,
+        title: Text('Detalle de Reserva', style: GoogleFonts.manrope(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _detailRow('Cliente:', booking.customerName),
+            _detailRow('Teléfono:', booking.customerPhone),
+            _detailRow('Código:', booking.bookingCode),
+            _detailRow('Método:', booking.paymentMethod.toUpperCase()),
+            _detailRow('Precio:', '$ ${booking.price.toInt()}'),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cerrar')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () {
+              context.read<AgendaBloc>().add(CancelBookingEvent(
+                bookingId: booking.id,
+                sportCenterId: _selectedSportCenterId!,
+                date: DateFormat('yyyy-MM-dd').format(_selectedDate),
+              ));
+              Navigator.pop(context);
+            },
+            child: const Text('Cancelar Reserva'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _detailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Text(label, style: const TextStyle(color: AppColors.onSurfaceVariant, fontWeight: FontWeight.bold, fontSize: 12)),
+          const SizedBox(width: 8),
+          Expanded(child: Text(value, style: const TextStyle(color: Colors.white, fontSize: 13))),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: BlocListener<AgendaBloc, AgendaState>(
-          listener: (context, state) {
-            if (state is AdminCourtsLoaded) {
-              setState(() {
-                _availableCenters = state.adminCourts;
-                if (_availableCenters.isNotEmpty) {
-                  _selectedSportCenterId = _availableCenters.first.sportCenter.id;
-                  _loadAgenda();
-                }
-              });
-            }
-          },
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(),
-              _buildDateSelector(),
-              _buildViewTypeSelector(),
-              Expanded(
-                child: BlocBuilder<AgendaBloc, AgendaState>(
-                  builder: (context, state) {
-                    if (state is AgendaLoading) {
-                      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
-                    } else if (state is AgendaLoaded) {
-                      return _buildAgendaView(state.schedules);
-                    } else if (state is AgendaError) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(state.message, style: const TextStyle(color: AppColors.error)),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: _loadAgenda,
-                              child: const Text('Reintentar'),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                    return const Center(child: Text('Cargando agenda...', style: TextStyle(color: Colors.white)));
-                  },
+    return BlocListener<AgendaBloc, AgendaState>(
+      listener: (context, state) {
+        if (state is CourtActionSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message), backgroundColor: AppColors.primary, behavior: SnackBarBehavior.floating),
+          );
+        } else if (state is AgendaError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message), backgroundColor: AppColors.error),
+          );
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: BlocListener<AgendaBloc, AgendaState>(
+            listener: (context, state) {
+              if (state is AdminCourtsLoaded) {
+                setState(() {
+                  _availableCenters = state.adminCourts;
+                  if (_availableCenters.isNotEmpty && _selectedSportCenterId == null) {
+                    _selectedSportCenterId = _availableCenters.first.sportCenter.id;
+                    _loadAgenda();
+                  }
+                });
+              }
+            },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(),
+                _buildDateSelector(),
+                _buildViewTypeSelector(),
+                Expanded(
+                  child: BlocBuilder<AgendaBloc, AgendaState>(
+                    builder: (context, state) {
+                      if (state is AgendaLoading) {
+                        return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+                      } else if (state is AgendaLoaded) {
+                        return _buildAgendaView(state.schedules);
+                      } else if (state is AgendaError) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(state.message, style: const TextStyle(color: AppColors.error)),
+                              const SizedBox(height: 16),
+                              ElevatedButton(
+                                onPressed: _loadAgenda,
+                                child: const Text('Reintentar'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                      return const Center(child: Text('Cargando agenda...', style: TextStyle(color: Colors.white)));
+                    },
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
+        bottomNavigationBar: const AppNavigationBar(currentPath: '/agenda'),
       ),
-      bottomNavigationBar: const AppNavigationBar(currentPath: '/agenda'),
     );
   }
 
@@ -174,7 +298,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: 14, // Show 2 weeks
+        itemCount: 14,
         itemBuilder: (context, index) {
           final date = DateTime.now().add(Duration(days: index));
           final isSelected = DateFormat('yyyy-MM-dd').format(date) ==
@@ -307,12 +431,11 @@ class _AgendaScreenState extends State<AgendaScreen> {
 
     const double hourColWidth = 70.0;
     final double screenWidth = MediaQuery.of(context).size.width;
-    final double availableWidth = screenWidth - 32 - hourColWidth; // 16 padding on each side
+    final double availableWidth = screenWidth - 32 - hourColWidth;
     final double columnWidth = schedules.length <= 2 ? availableWidth / schedules.length : 140.0;
 
     return Column(
       children: [
-        // Header
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
@@ -349,7 +472,6 @@ class _AgendaScreenState extends State<AgendaScreen> {
           ),
         ),
 
-        // Grid
         Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -405,7 +527,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
                             return Container(
                               width: columnWidth,
                               padding: const EdgeInsets.all(4),
-                              child: _buildSlotCard(slot),
+                              child: _buildSlotCard(slot, court.courtId, court.courtName),
                             );
                           }).toList(),
                         ],
@@ -421,79 +543,85 @@ class _AgendaScreenState extends State<AgendaScreen> {
     );
   }
 
-  Widget _buildSlotCard(TimeSlot slot) {
+  Widget _buildSlotCard(TimeSlot slot, String courtId, String courtName) {
     switch (slot.status) {
       case 'available':
-        return Container(
-          height: 80,
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColors.primary, width: 1.5, style: BorderStyle.solid),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.add_circle, color: AppColors.primary, size: 20),
-              const SizedBox(height: 4),
-              Text(
-                'DISPONIBLE',
-                style: GoogleFonts.inter(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
+        return GestureDetector(
+          onTap: () => _showInternalBookingDialog(slot, courtId, courtName),
+          child: Container(
+            height: 80,
+            decoration: BoxDecoration(
+              border: Border.all(color: AppColors.primary, width: 1.5, style: BorderStyle.solid),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.add_circle, color: AppColors.primary, size: 20),
+                const SizedBox(height: 4),
+                Text(
+                  'DISPONIBLE',
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       case 'booked':
       case 'passed_booked':
         final isPassed = slot.status == 'passed_booked';
-        return Container(
-          height: 80,
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: const Color(0xFF3E4A59),
-            borderRadius: BorderRadius.circular(12),
-            border: Border(
-              left: BorderSide(color: isPassed ? Colors.white : AppColors.primary, width: 4),
+        return GestureDetector(
+          onTap: () => _showBookingDetailsDialog(slot),
+          child: Container(
+            height: 80,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF3E4A59),
+              borderRadius: BorderRadius.circular(12),
+              border: Border(
+                left: BorderSide(color: isPassed ? Colors.white : AppColors.primary, width: 4),
+              ),
             ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                isPassed ? 'SESIÓN ACTUAL' : 'RESERVADO',
-                style: GoogleFonts.inter(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white70,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                slot.booking?.customerName ?? 'Cliente',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.manrope(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              const Spacer(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Icon(
-                    isPassed ? Icons.timer_outlined : Icons.check_circle,
-                    size: 14,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  isPassed ? 'SESIÓN ACTUAL' : 'RESERVADO',
+                  style: GoogleFonts.inter(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w600,
                     color: Colors.white70,
                   ),
-                ],
-              ),
-            ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  slot.booking?.customerName ?? 'Cliente',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.manrope(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const Spacer(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Icon(
+                      isPassed ? Icons.timer_outlined : Icons.check_circle,
+                      size: 14,
+                      color: Colors.white70,
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       case 'passed':
