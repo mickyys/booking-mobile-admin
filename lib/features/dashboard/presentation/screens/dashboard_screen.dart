@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:go_router/go_router.dart';
 import 'package:reservaloya_admin/core/theme/app_colors.dart';
 import 'package:reservaloya_admin/core/widgets/tonal_card.dart';
+import 'package:reservaloya_admin/core/widgets/app_navigation_bar.dart';
 import 'package:reservaloya_admin/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:reservaloya_admin/features/auth/presentation/bloc/auth_state.dart';
 import 'package:reservaloya_admin/features/dashboard/presentation/bloc/dashboard_bloc.dart';
@@ -249,7 +249,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           },
         ),
       ),
-      bottomNavigationBar: _CustomNavBar(),
+      bottomNavigationBar: const AppNavigationBar(currentPath: '/dashboard'),
     );
   }
 
@@ -313,64 +313,6 @@ class _StatCard extends StatelessWidget {
                   color: color,
                   fontWeight: FontWeight.bold,
                 ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CustomNavBar extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 80,
-      decoration: BoxDecoration(
-        color: AppColors.surfaceHighest.withAlpha(204), // 80% opacity
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _NavBarItem(icon: Icons.dashboard_outlined, label: 'Inicio', isActive: true, path: '/dashboard'),
-          _NavBarItem(icon: Icons.calendar_today_outlined, label: 'Agenda', path: '/agenda'),
-          _NavBarItem(icon: Icons.sports_tennis_outlined, label: 'Canchas'),
-          _NavBarItem(icon: Icons.settings_outlined, label: 'Ajustes'),
-        ],
-      ),
-    );
-  }
-}
-
-class _NavBarItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool isActive;
-  final String? path;
-
-  const _NavBarItem({required this.icon, required this.label, this.isActive = false, this.path});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: path != null ? () => context.go(path!) : null,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: isActive ? AppColors.primary : AppColors.onSurfaceVariant,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: isActive ? AppColors.primary : AppColors.onSurfaceVariant,
-              fontSize: 10,
-            ),
           ),
         ],
       ),

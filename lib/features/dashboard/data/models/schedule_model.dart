@@ -10,8 +10,8 @@ class CourtScheduleModel extends CourtSchedule {
 
   factory CourtScheduleModel.fromJson(Map<String, dynamic> json) {
     return CourtScheduleModel(
-      courtId: json['court_id'] ?? '',
-      courtName: json['court_name'] ?? '',
+      courtId: (json['court_id'] ?? json['courtId'] ?? '').toString(),
+      courtName: json['court_name'] ?? json['courtName'] ?? '',
       slots: (json['slots'] as List?)
               ?.map((e) => TimeSlotModel.fromJson(e))
               .toList() ??
@@ -31,8 +31,8 @@ class TimeSlotModel extends TimeSlot {
   factory TimeSlotModel.fromJson(Map<String, dynamic> json) {
     return TimeSlotModel(
       hour: json['hour'] ?? 0,
-      isAvailable: json['is_available'] ?? false,
-      isBlocked: json['is_blocked'] ?? false,
+      isAvailable: json['is_available'] ?? json['isAvailable'] ?? false,
+      isBlocked: json['is_blocked'] ?? json['isBlocked'] ?? false,
       booking: json['booking'] != null ? BookingModel.fromJson(json['booking']) : null,
     );
   }

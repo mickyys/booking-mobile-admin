@@ -6,6 +6,7 @@ import 'core/theme/app_theme.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
 import 'features/dashboard/presentation/bloc/dashboard_bloc.dart';
+import 'features/dashboard/presentation/bloc/agenda_bloc.dart';
 import 'features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'features/dashboard/presentation/screens/agenda_screen.dart';
 import 'injection_container.dart' as di;
@@ -44,6 +45,7 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => di.sl<AuthBloc>()),
         BlocProvider(create: (_) => di.sl<DashboardBloc>()),
+        BlocProvider(create: (_) => di.sl<AgendaBloc>()),
       ],
       child: MaterialApp.router(
         title: 'ReservaloYA Admin',

@@ -40,8 +40,10 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
       // Note: id is hardcoded as '1' for now, ideally this should come from user profile
       final response = await dio.get('/sport-centers/1/schedules/bookings', queryParameters: {'date': date, 'all': true});
       if (response.statusCode == 200) {
+        print('AGENDA RAW DATA: ${response.data}');
         return (response.data as List).map((e) => CourtScheduleModel.fromJson(e)).toList();
       } else {
+        print('DashboardRemoteDataSource: Failed to load agenda with status ${response.statusCode}');
         throw Exception('Failed to load agenda: ${response.statusCode}');
       }
     } catch (e) {
