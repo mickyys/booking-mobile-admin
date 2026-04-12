@@ -1,5 +1,6 @@
 import 'package:auth0_flutter/auth0_flutter.dart';
 import '../models/user_model.dart';
+import '../../../../core/config/app_config.dart';
 
 abstract class AuthRemoteDataSource {
   Future<UserModel> login(String email, String password);
@@ -14,11 +15,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<UserModel> login(String email, String password) async {
     try {
-      // Corrected parameters for auth0.api.login based on analyzer errors
       final credentials = await auth0.api.login(
         usernameOrEmail: email,
         password: password,
         connectionOrRealm: 'Username-Password-Authentication',
+        audience: AppConfig.auth0Audience,
+        scopes: {'openid', 'profile', 'email'},
       );
 
       return UserModel(
