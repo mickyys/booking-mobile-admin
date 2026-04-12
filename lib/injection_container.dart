@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:auth0_flutter/auth0_flutter.dart';
+import 'core/utils/auth_interceptor.dart';
 
 // Auth
 import 'features/auth/data/datasources/auth_remote_data_source.dart';
@@ -20,11 +21,28 @@ import 'features/dashboard/presentation/bloc/dashboard_bloc.dart';
 final sl = GetIt.instance;
 
 Future<void> init() async {
+  //! External
+  final sharedPreferences = await SharedPreferences.getInstance();
+  sl.registerLazySingleton(() => sharedPreferences);
+
+  final dio = Dio(BaseOptions(
+    baseUrl: 'https://api.reservaloya.cl/api',
+    connectTimeout: const Duration(seconds: 10),
+    receiveTimeout: const Duration(seconds: 10),
+  ));
+  dio.interceptors.add(AuthInterceptor(sharedPreferences: sl()));
+  sl.registerLazySingleton(() => dio);
+
+  sl.registerLazySingleton(() => Auth0('dev-8obo6dl4.us.auth0.com', 'gSv4eupv6F0eRjctmIKrCNzK7Z535Xp9'));
+
   //! Features
   // Auth
   sl.registerFactory(() => AuthBloc(loginUseCase: sl()));
   sl.registerLazySingleton(() => LoginUseCase(sl()));
-  sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(remoteDataSource: sl()));
+  sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(
+    remoteDataSource: sl(),
+    sharedPreferences: sl(),
+  ));
   sl.registerLazySingleton<AuthRemoteDataSource>(() => AuthRemoteDataSourceImpl(auth0: sl()));
 
   // Dashboard
@@ -32,18 +50,4 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetDashboardDataUseCase(sl()));
   sl.registerLazySingleton<DashboardRepository>(() => DashboardRepositoryImpl(remoteDataSource: sl()));
   sl.registerLazySingleton<DashboardRemoteDataSource>(() => DashboardRemoteDataSourceImpl(dio: sl()));
-
-  //! Core
-
-  //! External
-  final sharedPreferences = await SharedPreferences.getInstance();
-  sl.registerLazySingleton(() => sharedPreferences);
-  sl.registerLazySingleton(() => Dio(BaseOptions(
-    baseUrl: 'https://api.reservaloya.cl/api',
-    connectTimeout: const Duration(seconds: 10),
-    receiveTimeout: const Duration(seconds: 10),
-  )));
-
-  // Auth0 Configuration
-  sl.registerLazySingleton(() => Auth0('dev-8obo6dl4.us.auth0.com', 'gSv4eupv6F0eRjctmIKrCNzK7Z535Xp9'));
 }

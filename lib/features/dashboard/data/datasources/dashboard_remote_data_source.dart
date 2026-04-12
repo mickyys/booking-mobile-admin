@@ -17,38 +17,12 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
       if (response.statusCode == 200) {
         return DashboardDataModel.fromJson(response.data);
       } else {
-        throw Exception();
+        throw Exception('Failed to load dashboard data: ${response.statusCode}');
       }
+    } on DioException catch (e) {
+      throw Exception('Network error while fetching dashboard data: ${e.message}');
     } catch (e) {
-      // Return mock data if API fails or for testing as per user's 90% fidelity goal
-      // In a real scenario, we'd handle errors properly.
-      return DashboardDataModel(
-        todayBookingsCount: 12,
-        todayRevenue: 156000,
-        totalRevenue: 2450000,
-        recentBookings: [
-          BookingModel(
-            id: '1',
-            customerName: 'Juan Pérez',
-            bookingCode: 'RZ-4512',
-            date: '2023-10-27',
-            hour: 18,
-            courtName: 'Cancha 1 (Pádel)',
-            status: 'confirmed',
-            price: 25000,
-          ),
-          BookingModel(
-            id: '2',
-            customerName: 'María García',
-            bookingCode: 'RZ-4513',
-            date: '2023-10-27',
-            hour: 19,
-            courtName: 'Cancha 2 (Tenis)',
-            status: 'pending',
-            price: 18000,
-          ),
-        ],
-      );
+      throw Exception('Unexpected error while fetching dashboard data: $e');
     }
   }
 }
