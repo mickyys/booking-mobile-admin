@@ -29,7 +29,7 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
 
-        val auth0DomainValue = project.findProperty("AUTH0_DOMAIN") as String? ?: "dev-8obo6dl4.us.auth0.com"
+        val auth0DomainValue = project.findProperty("AUTH0_DOMAIN") as String? ?: ""
         manifestPlaceholders.putAll(
             mapOf(
                 "auth0Domain" to auth0DomainValue,
