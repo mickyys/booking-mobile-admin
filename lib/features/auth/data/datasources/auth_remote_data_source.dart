@@ -15,6 +15,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<UserModel> login(String email, String password) async {
     try {
+      print('AUTH REMOTE: Attempting login for: $email');
+      print('AUTH REMOTE: Password length: ${password.length}');
+
       final credentials = await auth0.api.login(
         usernameOrEmail: email,
         password: password,
@@ -23,12 +26,25 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         scopes: {'openid', 'profile', 'email'},
       );
 
+      print(
+        'AUTH REMOTE: Login successful for user id: ${credentials.user.sub}',
+      );
+      print(
+        'AUTH REMOTE: User email returned: ${credentials.user.email ?? email}',
+      );
+      print(
+        'AUTH REMOTE: Access token length: ${credentials.accessToken?.length ?? 0}',
+      );
+
       return UserModel(
         id: credentials.user.sub,
         email: credentials.user.email ?? email,
         token: credentials.accessToken,
       );
-    } catch (e) {
+    } catch (e, st) {
+      print('AUTH REMOTE: Login failed for $email');
+      print('AUTH REMOTE: Error: $e');
+      print('AUTH REMOTE: StackTrace: $st');
       throw Exception('Login with credentials failed: $e');
     }
   }

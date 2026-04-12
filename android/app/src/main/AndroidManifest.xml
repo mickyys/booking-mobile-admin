@@ -3,7 +3,8 @@
     <application
         android:label="reservaloya_admin"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:enableOnBackInvokedCallback="true">
 
         <activity
             android:name=".MainActivity"
@@ -15,7 +16,6 @@
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
 
-            <!-- Theme mientras Flutter inicia -->
             <meta-data
                 android:name="io.flutter.embedding.android.NormalTheme"
                 android:resource="@style/NormalTheme"/>
@@ -27,7 +27,6 @@
 
         </activity>
 
-        <!-- Redirect necesario para Auth0 -->
         <activity
             android:name="com.auth0.android.provider.RedirectActivity"
             android:exported="true">
@@ -46,14 +45,12 @@
 
         </activity>
 
-        <!-- Flutter embedding -->
         <meta-data
             android:name="flutterEmbedding"
             android:value="2"/>
 
     </application>
 
-    <!-- Permite consultar apps que procesan texto -->
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>

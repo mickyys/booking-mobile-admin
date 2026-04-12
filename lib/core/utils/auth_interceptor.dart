@@ -25,12 +25,27 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    print('DIO ERROR: [${err.requestOptions.method}] ${err.requestOptions.baseUrl}${err.requestOptions.path}');
+    print(
+      'DIO ERROR: [${err.requestOptions.method}] ${err.requestOptions.baseUrl}${err.requestOptions.path}',
+    );
     print('ERROR MESSAGE: ${err.message}');
     if (err.response != null) {
       print('STATUS CODE: ${err.response?.statusCode}');
       print('RESPONSE DATA: ${err.response?.data}');
     }
     super.onError(err, handler);
+  }
+
+  @override
+  void onResponse(Response response, ResponseInterceptorHandler handler) {
+    final req = response.requestOptions;
+    print('DIO RESPONSE: [${req.method}] ${req.baseUrl}${req.path}');
+    print('STATUS CODE: ${response.statusCode}');
+    try {
+      print('RESPONSE DATA: ${response.data}');
+    } catch (e) {
+      print('RESPONSE DATA: <unable to print>');
+    }
+    super.onResponse(response, handler);
   }
 }
