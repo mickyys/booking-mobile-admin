@@ -18,7 +18,9 @@ import 'features/dashboard/data/repositories/dashboard_repository_impl.dart';
 import 'features/dashboard/domain/repositories/dashboard_repository.dart';
 import 'features/dashboard/domain/usecases/get_dashboard_data_usecase.dart';
 import 'features/dashboard/domain/usecases/get_agenda_usecase.dart';
+import 'features/dashboard/domain/usecases/get_admin_courts_usecase.dart';
 import 'features/dashboard/presentation/bloc/dashboard_bloc.dart';
+import 'features/dashboard/presentation/bloc/agenda_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -53,9 +55,11 @@ Future<void> init() async {
   );
 
   // Dashboard
-  sl.registerFactory(() => DashboardBloc(getDashboardDataUseCase: sl(), getAgendaUseCase: sl()));
+  sl.registerFactory(() => DashboardBloc(getDashboardDataUseCase: sl()));
+  sl.registerFactory(() => AgendaBloc(getAgendaUseCase: sl(), getAdminCourtsUseCase: sl()));
   sl.registerLazySingleton(() => GetDashboardDataUseCase(sl()));
   sl.registerLazySingleton(() => GetAgendaUseCase(sl()));
+  sl.registerLazySingleton(() => GetAdminCourtsUseCase(sl()));
   sl.registerLazySingleton<DashboardRepository>(
     () => DashboardRepositoryImpl(remoteDataSource: sl()),
   );
