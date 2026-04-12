@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:go_router/go_router.dart';
 import 'package:reservaloya_admin/core/theme/app_colors.dart';
 import 'package:reservaloya_admin/core/widgets/tonal_card.dart';
 import 'package:reservaloya_admin/features/auth/presentation/bloc/auth_bloc.dart';
@@ -334,8 +335,8 @@ class _CustomNavBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _NavBarItem(icon: Icons.dashboard_outlined, label: 'Inicio', isActive: true),
-          _NavBarItem(icon: Icons.calendar_today_outlined, label: 'Agenda'),
+          _NavBarItem(icon: Icons.dashboard_outlined, label: 'Inicio', isActive: true, path: '/dashboard'),
+          _NavBarItem(icon: Icons.calendar_today_outlined, label: 'Agenda', path: '/agenda'),
           _NavBarItem(icon: Icons.sports_tennis_outlined, label: 'Canchas'),
           _NavBarItem(icon: Icons.settings_outlined, label: 'Ajustes'),
         ],
@@ -348,27 +349,31 @@ class _NavBarItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool isActive;
+  final String? path;
 
-  const _NavBarItem({required this.icon, required this.label, this.isActive = false});
+  const _NavBarItem({required this.icon, required this.label, this.isActive = false, this.path});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          icon,
-          color: isActive ? AppColors.primary : AppColors.onSurfaceVariant,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
+    return InkWell(
+      onTap: path != null ? () => context.go(path!) : null,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
             color: isActive ? AppColors.primary : AppColors.onSurfaceVariant,
-            fontSize: 10,
           ),
-        ),
-      ],
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: isActive ? AppColors.primary : AppColors.onSurfaceVariant,
+              fontSize: 10,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

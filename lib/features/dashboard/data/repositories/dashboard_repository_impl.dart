@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/booking.dart';
+import '../../domain/entities/schedule.dart';
 import '../../domain/repositories/dashboard_repository.dart';
 import '../datasources/dashboard_remote_data_source.dart';
 
@@ -16,6 +17,16 @@ class DashboardRepositoryImpl implements DashboardRepository {
       return Right(data);
     } catch (e) {
       return const Left(ServerFailure('Error al cargar datos del dashboard.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<CourtSchedule>>> getAgenda(String date) async {
+    try {
+      final data = await remoteDataSource.getAgenda(date);
+      return Right(data);
+    } catch (e) {
+      return const Left(ServerFailure('Error al cargar la agenda.'));
     }
   }
 }
