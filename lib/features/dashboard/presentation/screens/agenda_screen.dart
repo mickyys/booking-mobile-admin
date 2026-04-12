@@ -8,6 +8,7 @@ import '../bloc/agenda_bloc.dart';
 import '../bloc/agenda_event.dart';
 import '../bloc/agenda_state.dart';
 import '../../domain/entities/schedule.dart';
+import '../../domain/entities/sport_center.dart';
 
 class AgendaScreen extends StatefulWidget {
   const AgendaScreen({super.key});
@@ -18,16 +19,23 @@ class AgendaScreen extends StatefulWidget {
 
 class _AgendaScreenState extends State<AgendaScreen> {
   DateTime _selectedDate = DateTime.now();
+  String? _selectedSportCenterId;
+  List<AdminSportCenterCourts> _availableCenters = [];
 
   @override
   void initState() {
     super.initState();
-    _loadAgenda();
+    context.read<AgendaBloc>().add(LoadAdminCourts());
   }
 
   void _loadAgenda() {
-    final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
-    context.read<AgendaBloc>().add(LoadAgendaData(date: dateStr));
+    if (_selectedSportCenterId != null) {
+      final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
+      context.read<AgendaBloc>().add(LoadAgendaData(
+            sportCenterId: _selectedSportCenterId!,
+            date: dateStr,
+          ));
+    }
   }
 
   @override
@@ -57,26 +65,80 @@ class _AgendaScreenState extends State<AgendaScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          _buildDateHeader(),
-          Expanded(
-            child: BlocBuilder<AgendaBloc, AgendaState>(
-              builder: (context, state) {
-                if (state is AgendaLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (state is AgendaLoaded) {
-                  return _buildAgendaList(state.schedules);
-                } else if (state is AgendaError) {
-                  return Center(child: Text(state.message));
-                }
-                return const SizedBox.shrink();
-              },
+      body: BlocListener<AgendaBloc, AgendaState>(
+        listener: (context, state) {
+          if (state is AdminCourtsLoaded) {
+            setState(() {
+              _availableCenters = state.adminCourts;
+              if (_availableCenters.isNotEmpty) {
+                _selectedSportCenterId = _availableCenters.first.sportCenter.id;
+                _loadAgenda();
+              }
+            });
+          }
+        },
+        child: Column(
+          children: [
+            if (_availableCenters.length > 1) _buildSportCenterSelector(),
+            _buildDateHeader(),
+            Expanded(
+              child: BlocBuilder<AgendaBloc, AgendaState>(
+                builder: (context, state) {
+                  if (state is AgendaLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (state is AgendaLoaded) {
+                    return _buildAgendaList(state.schedules);
+                  } else if (state is AgendaError) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(state.message, style: const TextStyle(color: AppColors.error)),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: _loadAgenda,
+                            child: const Text('Reintentar'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return const Center(child: Text('Selecciona un centro deportivo'));
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       bottomNavigationBar: const AppNavigationBar(currentPath: '/agenda'),
+    );
+  }
+
+  Widget _buildSportCenterSelector() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: AppColors.surface,
+      child: DropdownButtonFormField<String>(
+        initialValue: _selectedSportCenterId,
+        decoration: const InputDecoration(
+          labelText: 'Centro Deportivo',
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        ),
+        items: _availableCenters.map((center) {
+          return DropdownMenuItem(
+            value: center.sportCenter.id,
+            child: Text(center.sportCenter.name),
+          );
+        }).toList(),
+        onChanged: (value) {
+          if (value != null) {
+            setState(() {
+              _selectedSportCenterId = value;
+            });
+            _loadAgenda();
+          }
+        },
+      ),
     );
   }
 
@@ -119,7 +181,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
 
   Widget _buildAgendaList(List<CourtSchedule> schedules) {
     if (schedules.isEmpty) {
-      return const Center(child: Text('No hay canchas configuradas.'));
+      return const Center(child: Text('No hay información disponible para esta fecha.'));
     }
 
     return ListView.builder(
