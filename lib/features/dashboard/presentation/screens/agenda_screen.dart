@@ -46,69 +46,98 @@ class _AgendaScreenState extends State<AgendaScreen> {
   void _loadAgenda() {
     if (_selectedSportCenterId != null) {
       final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
-      context.read<AgendaBloc>().add(LoadAgendaData(
-            sportCenterId: _selectedSportCenterId!,
-            date: dateStr,
-          ));
+      context.read<AgendaBloc>().add(
+        LoadAgendaData(sportCenterId: _selectedSportCenterId!, date: dateStr),
+      );
     }
   }
 
-  void _showInternalBookingDialog(TimeSlot slot, String courtId, String courtName) {
+  void _showInternalBookingDialog(
+    TimeSlot slot,
+    String courtId,
+    String courtName,
+  ) {
     final nameController = TextEditingController();
     final phoneController = TextEditingController();
-    final priceController = TextEditingController(text: slot.price.toInt().toString());
+    final priceController = TextEditingController(
+      text: slot.price.toInt().toString(),
+    );
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surfaceHigh,
-        title: Text('Reserva Manual - $courtName', style: GoogleFonts.manrope(color: Colors.white, fontSize: 18)),
+        title: Text(
+          'Reserva Manual - $courtName',
+          style: GoogleFonts.manrope(color: Colors.white, fontSize: 18),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Hora: ${slot.hour}:00', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+            Text(
+              'Hora: ${slot.hour}:00',
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 16),
             TextField(
               controller: nameController,
               style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(labelText: 'Nombre Cliente', labelStyle: TextStyle(color: AppColors.onSurfaceVariant)),
+              decoration: const InputDecoration(
+                labelText: 'Nombre Cliente',
+                labelStyle: TextStyle(color: AppColors.onSurfaceVariant),
+              ),
             ),
             TextField(
               controller: phoneController,
               keyboardType: TextInputType.phone,
               style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(labelText: 'Teléfono', labelStyle: TextStyle(color: AppColors.onSurfaceVariant)),
+              decoration: const InputDecoration(
+                labelText: 'Teléfono',
+                labelStyle: TextStyle(color: AppColors.onSurfaceVariant),
+              ),
             ),
             TextField(
               controller: priceController,
               keyboardType: TextInputType.number,
               style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(labelText: 'Precio ($)', labelStyle: TextStyle(color: AppColors.onSurfaceVariant)),
+              decoration: const InputDecoration(
+                labelText: 'Precio',
+                labelStyle: TextStyle(color: AppColors.onSurfaceVariant),
+              ),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
           ElevatedButton(
             onPressed: () {
               final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
-              context.read<AgendaBloc>().add(CreateInternalBookingEvent(
-                bookingData: {
-                  'court_id': courtId,
-                  'sport_center_id': _selectedSportCenterId,
-                  'date': '${dateStr}T00:00:00Z',
-                  'hour': slot.hour,
-                  'price': double.tryParse(priceController.text) ?? slot.price,
-                  'customer_name': nameController.text,
-                  'customer_phone': phoneController.text,
-                  'payment_method': 'internal',
-                },
-              ));
+              context.read<AgendaBloc>().add(
+                CreateInternalBookingEvent(
+                  bookingData: {
+                    'court_id': courtId,
+                    'sport_center_id': _selectedSportCenterId,
+                    'date': '${dateStr}T00:00:00Z',
+                    'hour': slot.hour,
+                    'price':
+                        double.tryParse(priceController.text) ?? slot.price,
+                    'customer_name': nameController.text,
+                    'customer_phone': phoneController.text,
+                    'payment_method': 'internal',
+                  },
+                ),
+              );
               Navigator.pop(context);
             },
             child: const Text('Reservar'),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -121,7 +150,10 @@ class _AgendaScreenState extends State<AgendaScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surfaceHigh,
-        title: Text('Detalle de Reserva', style: GoogleFonts.manrope(color: Colors.white)),
+        title: Text(
+          'Detalle de Reserva',
+          style: GoogleFonts.manrope(color: Colors.white),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,19 +162,24 @@ class _AgendaScreenState extends State<AgendaScreen> {
             _detailRow('Teléfono:', booking.customerPhone),
             _detailRow('Código:', booking.bookingCode),
             _detailRow('Método:', booking.paymentMethod.toUpperCase()),
-            _detailRow('Precio:', '$ ${booking.price.toInt()}'),
+            _detailRow('Precio:', '\$ ${booking.price.toInt()}'),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cerrar')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cerrar'),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () {
-              context.read<AgendaBloc>().add(CancelBookingEvent(
-                bookingId: booking.id,
-                sportCenterId: _selectedSportCenterId!,
-                date: DateFormat('yyyy-MM-dd').format(_selectedDate),
-              ));
+              context.read<AgendaBloc>().add(
+                CancelBookingEvent(
+                  bookingId: booking.id,
+                  sportCenterId: _selectedSportCenterId!,
+                  date: DateFormat('yyyy-MM-dd').format(_selectedDate),
+                ),
+              );
               Navigator.pop(context);
             },
             child: const Text('Cancelar Reserva'),
@@ -157,9 +194,21 @@ class _AgendaScreenState extends State<AgendaScreen> {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Text(label, style: const TextStyle(color: AppColors.onSurfaceVariant, fontWeight: FontWeight.bold, fontSize: 12)),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.onSurfaceVariant,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
           const SizedBox(width: 8),
-          Expanded(child: Text(value, style: const TextStyle(color: Colors.white, fontSize: 13))),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(color: Colors.white, fontSize: 13),
+            ),
+          ),
         ],
       ),
     );
@@ -171,11 +220,18 @@ class _AgendaScreenState extends State<AgendaScreen> {
       listener: (context, state) {
         if (state is CourtActionSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: AppColors.primary, behavior: SnackBarBehavior.floating),
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: AppColors.primary,
+              behavior: SnackBarBehavior.floating,
+            ),
           );
         } else if (state is AgendaError) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: AppColors.error),
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: AppColors.error,
+            ),
           );
         }
       },
@@ -187,8 +243,10 @@ class _AgendaScreenState extends State<AgendaScreen> {
               if (state is AdminCourtsLoaded) {
                 setState(() {
                   _availableCenters = state.adminCourts;
-                  if (_availableCenters.isNotEmpty && _selectedSportCenterId == null) {
-                    _selectedSportCenterId = _availableCenters.first.sportCenter.id;
+                  if (_availableCenters.isNotEmpty &&
+                      _selectedSportCenterId == null) {
+                    _selectedSportCenterId =
+                        _availableCenters.first.sportCenter.id;
                     _loadAgenda();
                   }
                 });
@@ -204,7 +262,11 @@ class _AgendaScreenState extends State<AgendaScreen> {
                   child: BlocBuilder<AgendaBloc, AgendaState>(
                     builder: (context, state) {
                       if (state is AgendaLoading) {
-                        return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+                        return const Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.primary,
+                          ),
+                        );
                       } else if (state is AgendaLoaded) {
                         return _buildAgendaView(state.schedules);
                       } else if (state is AgendaError) {
@@ -212,7 +274,10 @@ class _AgendaScreenState extends State<AgendaScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text(state.message, style: const TextStyle(color: AppColors.error)),
+                              Text(
+                                state.message,
+                                style: const TextStyle(color: AppColors.error),
+                              ),
                               const SizedBox(height: 16),
                               ElevatedButton(
                                 onPressed: _loadAgenda,
@@ -222,7 +287,12 @@ class _AgendaScreenState extends State<AgendaScreen> {
                           ),
                         );
                       }
-                      return const Center(child: Text('Cargando agenda...', style: TextStyle(color: Colors.white)));
+                      return const Center(
+                        child: Text(
+                          'Cargando agenda...',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      );
                     },
                   ),
                 ),
@@ -253,7 +323,10 @@ class _AgendaScreenState extends State<AgendaScreen> {
                 ),
               ),
               Text(
-                DateFormat('MMMM yyyy', 'es').format(_selectedDate).toUpperCase(),
+                DateFormat(
+                  'MMMM yyyy',
+                  'es',
+                ).format(_selectedDate).toUpperCase(),
                 style: GoogleFonts.manrope(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -300,8 +373,9 @@ class _AgendaScreenState extends State<AgendaScreen> {
         itemCount: 14,
         itemBuilder: (context, index) {
           final date = DateTime.now().add(Duration(days: index));
-          final isSelected = DateFormat('yyyy-MM-dd').format(date) ==
-                             DateFormat('yyyy-MM-dd').format(_selectedDate);
+          final isSelected =
+              DateFormat('yyyy-MM-dd').format(date) ==
+              DateFormat('yyyy-MM-dd').format(_selectedDate);
 
           return GestureDetector(
             onTap: () {
@@ -325,7 +399,9 @@ class _AgendaScreenState extends State<AgendaScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: isSelected ? AppColors.onPrimary : AppColors.onSurfaceVariant,
+                      color: isSelected
+                          ? AppColors.onPrimary
+                          : AppColors.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -378,20 +454,6 @@ class _AgendaScreenState extends State<AgendaScreen> {
               color: Colors.white,
             ),
           ),
-          const Spacer(),
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceHigh,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                _buildToggleButton('Todas', true),
-                _buildToggleButton('Interior', false),
-              ],
-            ),
-          ),
         ],
       ),
     );
@@ -417,7 +479,12 @@ class _AgendaScreenState extends State<AgendaScreen> {
 
   Widget _buildAgendaView(List<CourtSchedule> schedules) {
     if (schedules.isEmpty) {
-      return const Center(child: Text('No hay canchas disponibles.', style: TextStyle(color: Colors.white)));
+      return const Center(
+        child: Text(
+          'No hay canchas disponibles.',
+          style: TextStyle(color: Colors.white),
+        ),
+      );
     }
 
     final hours = <int>{};
@@ -431,7 +498,9 @@ class _AgendaScreenState extends State<AgendaScreen> {
     const double hourColWidth = 70.0;
     final double screenWidth = MediaQuery.of(context).size.width;
     final double availableWidth = screenWidth - 32 - hourColWidth;
-    final double columnWidth = schedules.length <= 2 ? availableWidth / schedules.length : 140.0;
+    final double columnWidth = schedules.length <= 2
+        ? availableWidth / schedules.length
+        : 140.0;
 
     return Column(
       children: [
@@ -446,34 +515,36 @@ class _AgendaScreenState extends State<AgendaScreen> {
                   scrollDirection: Axis.horizontal,
                   physics: const ClampingScrollPhysics(),
                   child: Row(
-                    children: schedules.map((court) => Container(
-                      width: columnWidth,
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Column(
-                        children: [
-                          Text(
-                            court.courtName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.manrope(fontWeight: FontWeight.bold, color: Colors.white),
+                    children: schedules
+                        .map(
+                          (court) => Container(
+                            width: columnWidth,
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Column(
+                              children: [
+                                Text(
+                                  court.courtName,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.manrope(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                Text(
+                                  'PRINCIPAL',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    color: AppColors.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          Text(
-                            'PRINCIPAL',
-                            style: GoogleFonts.inter(fontSize: 10, color: AppColors.onSurfaceVariant),
-                          ),
-                        ],
-                      ),
-                    )).toList(),
+                        )
+                        .toList(),
                   ),
-                  Text(
-                    'PRINCIPAL',
-                    style: GoogleFonts.inter(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.onSurfaceVariant,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ],
           ),
@@ -506,11 +577,18 @@ class _AgendaScreenState extends State<AgendaScreen> {
                               children: [
                                 Text(
                                   '${hour.toString().padLeft(2, '0')}:00',
-                                  style: GoogleFonts.manrope(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                                  style: GoogleFonts.manrope(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
                                 ),
                                 Text(
                                   hour < 12 ? 'AM' : 'PM',
-                                  style: GoogleFonts.inter(fontSize: 10, color: AppColors.onSurfaceVariant),
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    color: AppColors.onSurfaceVariant,
+                                  ),
                                 ),
                               ],
                             ),
@@ -523,18 +601,24 @@ class _AgendaScreenState extends State<AgendaScreen> {
                                 break;
                               }
                             }
-                            final slot = foundSlot ?? TimeSlot(
-                              hour: hour,
-                              minutes: 0,
-                              price: 0.0,
-                              status: 'closed',
-                              paymentRequired: false,
-                              paymentOptional: false,
-                            );
+                            final slot =
+                                foundSlot ??
+                                TimeSlot(
+                                  hour: hour,
+                                  minutes: 0,
+                                  price: 0.0,
+                                  status: 'closed',
+                                  paymentRequired: false,
+                                  paymentOptional: false,
+                                );
                             return Container(
                               width: columnWidth,
                               padding: const EdgeInsets.all(4),
-                              child: _buildSlotCard(slot, court.courtId, court.courtName),
+                              child: _buildSlotCard(
+                                slot,
+                                court.courtId,
+                                court.courtName,
+                              ),
                             );
                           }).toList(),
                         ],
@@ -558,13 +642,21 @@ class _AgendaScreenState extends State<AgendaScreen> {
           child: Container(
             height: 80,
             decoration: BoxDecoration(
-              border: Border.all(color: AppColors.primary, width: 1.5, style: BorderStyle.solid),
+              border: Border.all(
+                color: AppColors.primary,
+                width: 1.5,
+                style: BorderStyle.solid,
+              ),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.add_circle, color: AppColors.primary, size: 20),
+                const Icon(
+                  Icons.add_circle,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
                 const SizedBox(height: 4),
                 Text(
                   'DISPONIBLE',
@@ -590,7 +682,10 @@ class _AgendaScreenState extends State<AgendaScreen> {
               color: const Color(0xFF3E4A59),
               borderRadius: BorderRadius.circular(12),
               border: Border(
-                left: BorderSide(color: isPassed ? Colors.white : AppColors.primary, width: 4),
+                left: BorderSide(
+                  color: isPassed ? Colors.white : AppColors.primary,
+                  width: 4,
+                ),
               ),
             ),
             child: Column(
