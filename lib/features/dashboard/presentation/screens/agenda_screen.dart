@@ -281,7 +281,6 @@ class _AgendaScreenState extends State<AgendaScreen> {
       return const Center(child: Text('No hay canchas disponibles.', style: TextStyle(color: Colors.white)));
     }
 
-    // Get all unique hours across all courts
     final hours = <int>{};
     for (var schedule in schedules) {
       for (var slot in schedule.slots) {
@@ -308,7 +307,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
                     ),
                   ),
                   Text(
-                    'PRINCIPAL', // Static for now based on design
+                    'PRINCIPAL',
                     style: GoogleFonts.inter(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
@@ -357,17 +356,23 @@ class _AgendaScreenState extends State<AgendaScreen> {
                     ),
                     const SizedBox(width: 16),
                     ...schedules.map((court) {
-                      final slot = court.slots.firstWhere(
-                        (s) => s.hour == hour,
-                        orElse: () => TimeSlot(
-                          hour: hour,
-                          minutes: 0,
-                          price: 0,
-                          status: 'closed',
-                          paymentRequired: false,
-                          paymentOptional: false,
-                        ),
+                      TimeSlot? foundSlot;
+                      for (final s in court.slots) {
+                        if (s.hour == hour) {
+                          foundSlot = s;
+                          break;
+                        }
+                      }
+
+                      final slot = foundSlot ?? TimeSlot(
+                        hour: hour,
+                        minutes: 0,
+                        price: 0.0,
+                        status: 'closed',
+                        paymentRequired: false,
+                        paymentOptional: false,
                       );
+
                       return Expanded(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
