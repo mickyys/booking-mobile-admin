@@ -10,9 +10,12 @@ class AppTheme {
       scaffoldBackgroundColor: AppColors.background,
       colorScheme: const ColorScheme.dark(
         primary: AppColors.primary,
+        onPrimary: AppColors.onPrimary,
+        primaryContainer: AppColors.primaryContainer,
         surface: AppColors.surface,
         onSurface: AppColors.onSurface,
         onSurfaceVariant: AppColors.onSurfaceVariant,
+        outline: AppColors.outline,
         error: AppColors.error,
       ),
       textTheme: TextTheme(
@@ -39,6 +42,10 @@ class AppTheme {
           color: AppColors.onSurface,
           fontSize: 14,
         ),
+        bodySmall: GoogleFonts.inter(
+          color: AppColors.onSurface,
+          fontSize: 12,
+        ),
         labelMedium: GoogleFonts.inter(
           color: AppColors.onSurfaceVariant,
           fontSize: 12,
@@ -47,7 +54,15 @@ class AppTheme {
       inputDecorationTheme: const InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surfaceHighest,
+        hintStyle: TextStyle(color: AppColors.onSurfaceVariant, fontSize: 14),
         border: UnderlineInputBorder(
+          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(8),
+            topRight: Radius.circular(8),
+          ),
+        ),
+        enabledBorder: UnderlineInputBorder(
           borderSide: BorderSide.none,
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(8),
