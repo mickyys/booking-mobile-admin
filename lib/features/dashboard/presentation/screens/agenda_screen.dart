@@ -57,62 +57,178 @@ class _AgendaScreenState extends State<AgendaScreen> {
     final nameController = TextEditingController();
     final phoneController = TextEditingController();
     final priceController = TextEditingController(text: slot.price.toInt().toString());
+    bool isBlocked = false;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surfaceHigh,
-        title: Text('Reserva Manual - $courtName', style: GoogleFonts.manrope(color: Colors.white, fontSize: 18)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Hora: ${slot.hour}:00', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            TextField(
-              controller: nameController,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(labelText: 'Nombre Cliente', labelStyle: TextStyle(color: AppColors.onSurfaceVariant)),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            backgroundColor: AppColors.surfaceHigh,
+            insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    isBlocked ? 'Bloquear Horario' : 'Reserva Manual',
+                    style: GoogleFonts.manrope(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                Switch(
+                  value: isBlocked,
+                  activeColor: AppColors.primary,
+                  onChanged: (value) {
+                    setState(() {
+                      isBlocked = value;
+                    });
+                  },
+                ),
+              ],
             ),
-            TextField(
-              controller: phoneController,
-              keyboardType: TextInputType.phone,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(labelText: 'Teléfono', labelStyle: TextStyle(color: AppColors.onSurfaceVariant)),
+            content: SizedBox(
+              width: MediaQuery.of(context).size.width * 0.9,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.stadium_outlined, color: AppColors.primary, size: 20),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(courtName, style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold)),
+                              Text('Hora: ${slot.hour}:00', style: GoogleFonts.inter(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.w600)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  if (!isBlocked) ...[
+                    TextField(
+                      controller: nameController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        labelText: 'Nombre Cliente',
+                        labelStyle: const TextStyle(color: AppColors.onSurfaceVariant),
+                        prefixIcon: const Icon(Icons.person_outline, color: AppColors.onSurfaceVariant),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.white10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: phoneController,
+                      keyboardType: TextInputType.phone,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        labelText: 'Teléfono',
+                        labelStyle: const TextStyle(color: AppColors.onSurfaceVariant),
+                        prefixIcon: const Icon(Icons.phone_outlined, color: AppColors.onSurfaceVariant),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.white10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: priceController,
+                      keyboardType: TextInputType.number,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        labelText: 'Precio',
+                        labelStyle: const TextStyle(color: AppColors.onSurfaceVariant),
+                        prefixIcon: const Icon(Icons.attach_money, color: AppColors.onSurfaceVariant),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.white10),
+                        ),
+                      ),
+                    ),
+                  ] else ...[
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        child: Column(
+                          children: [
+                            const Icon(Icons.block, color: AppColors.error, size: 48),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Este horario quedará marcado como bloqueado y no estará disponible para reservas externas.',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(color: Colors.white70, fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
-            TextField(
-              controller: priceController,
-              keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(labelText: 'Precio ($)', labelStyle: TextStyle(color: AppColors.onSurfaceVariant)),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
-          ElevatedButton(
-            onPressed: () {
-              final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
-              context.read<AgendaBloc>().add(CreateInternalBookingEvent(
-                bookingData: {
-                  'court_id': courtId,
-                  'sport_center_id': _selectedSportCenterId,
-                  'date': '${dateStr}T00:00:00Z',
-                  'hour': slot.hour,
-                  'price': double.tryParse(priceController.text) ?? slot.price,
-                  'customer_name': nameController.text,
-                  'customer_phone': phoneController.text,
-                  'payment_method': 'internal',
+            actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Cancelar', style: GoogleFonts.inter(color: AppColors.onSurfaceVariant)),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isBlocked ? AppColors.error : AppColors.primary,
+                  foregroundColor: isBlocked ? Colors.white : AppColors.onPrimary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+                onPressed: () {
+                  final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
+                  final Map<String, dynamic> bookingData = {
+                    'court_id': courtId,
+                    'sport_center_id': _selectedSportCenterId,
+                    'date': '${dateStr}T00:00:00Z',
+                    'hour': slot.hour,
+                    'price': isBlocked ? 0.0 : (double.tryParse(priceController.text) ?? slot.price),
+                    'payment_method': 'internal',
+                  };
+
+                  if (isBlocked) {
+                    bookingData['customer_name'] = 'BLOQUEADO';
+                  } else {
+                    bookingData['customer_name'] = nameController.text;
+                    bookingData['customer_phone'] = phoneController.text;
+                  }
+
+                  context.read<AgendaBloc>().add(CreateInternalBookingEvent(
+                        bookingData: bookingData,
+                      ));
+                  Navigator.pop(context);
                 },
-              ));
-              Navigator.pop(context);
-            },
-            child: const Text('Reservar'),
-          ),
-        ),
+                child: Text(isBlocked ? 'Bloquear' : 'Reservar'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
-
   void _showBookingDetailsDialog(TimeSlot slot) {
     final booking = slot.booking;
     if (booking == null) return;
@@ -130,7 +246,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
             _detailRow('Teléfono:', booking.customerPhone),
             _detailRow('Código:', booking.bookingCode),
             _detailRow('Método:', booking.paymentMethod.toUpperCase()),
-            _detailRow('Precio:', '$ ${booking.price.toInt()}'),
+            _detailRow('Precio:', '${booking.price.toInt()}'),
           ],
         ),
         actions: [
@@ -465,15 +581,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
                       ),
                     )).toList(),
                   ),
-                  Text(
-                    'PRINCIPAL',
-                    style: GoogleFonts.inter(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.onSurfaceVariant,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ],
           ),

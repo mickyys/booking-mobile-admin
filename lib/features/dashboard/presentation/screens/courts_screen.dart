@@ -291,7 +291,7 @@ class _CourtsScreenState extends State<CourtsScreen> {
                   color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.sports_tennis, color: AppColors.primary),
+                child: const Icon(Icons.stadium, color: AppColors.primary),
               ),
               const SizedBox(width: 16),
               Expanded(

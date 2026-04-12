@@ -26,9 +26,14 @@ class AppNavigationBar extends StatelessWidget {
           label: 'Agenda',
         ),
         NavigationDestination(
-          icon: Icon(Icons.sports_tennis_outlined),
-          selectedIcon: Icon(Icons.sports_tennis, color: AppColors.primary),
+          icon: Icon(Icons.stadium_outlined),
+          selectedIcon: Icon(Icons.stadium, color: AppColors.primary),
           label: 'Canchas',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.access_time_outlined),
+          selectedIcon: Icon(Icons.access_time, color: AppColors.primary),
+          label: 'Horarios',
         ),
         NavigationDestination(
           icon: Icon(Icons.settings_outlined),
@@ -42,6 +47,8 @@ class AppNavigationBar extends StatelessWidget {
     if (path.startsWith('/dashboard')) return 0;
     if (path.startsWith('/agenda')) return 1;
     if (path.startsWith('/courts')) return 2;
+    if (path.startsWith('/schedule-config')) return 3;
+    if (path.startsWith('/settings')) return 4;
     return 0;
   }
 
@@ -55,6 +62,12 @@ class AppNavigationBar extends StatelessWidget {
         break;
       case 2:
         context.go('/courts');
+        break;
+      case 3:
+        context.go('/schedule-config');
+        break;
+      case 4:
+        // context.go('/settings');
         break;
     }
   }
