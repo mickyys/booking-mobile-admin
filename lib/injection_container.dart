@@ -25,29 +25,39 @@ Future<void> init() async {
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton(() => sharedPreferences);
 
-  final dio = Dio(BaseOptions(
-    baseUrl: 'https://api.reservaloya.cl/api',
-    connectTimeout: const Duration(seconds: 10),
-    receiveTimeout: const Duration(seconds: 10),
-  ));
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: 'https://api.reservaloya.cl/api',
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+    ),
+  );
   dio.interceptors.add(AuthInterceptor(sharedPreferences: sl()));
   sl.registerLazySingleton(() => dio);
 
-  sl.registerLazySingleton(() => Auth0('dev-8obo6dl4.us.auth0.com', 'gSv4eupv6F0eRjctmIKrCNzK7Z535Xp9'));
+  sl.registerLazySingleton(
+    () =>
+        Auth0('dev-8obo6dl4.us.auth0.com', 'gSv4eupv6F0eRjctmIKrCNzK7Z535Xp9'),
+  );
 
   //! Features
   // Auth
   sl.registerFactory(() => AuthBloc(loginUseCase: sl()));
   sl.registerLazySingleton(() => LoginUseCase(sl()));
-  sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(
-    remoteDataSource: sl(),
-    sharedPreferences: sl(),
-  ));
-  sl.registerLazySingleton<AuthRemoteDataSource>(() => AuthRemoteDataSourceImpl(auth0: sl()));
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(remoteDataSource: sl(), sharedPreferences: sl()),
+  );
+  sl.registerLazySingleton<AuthRemoteDataSource>(
+    () => AuthRemoteDataSourceImpl(auth0: sl()),
+  );
 
   // Dashboard
   sl.registerFactory(() => DashboardBloc(getDashboardDataUseCase: sl()));
   sl.registerLazySingleton(() => GetDashboardDataUseCase(sl()));
-  sl.registerLazySingleton<DashboardRepository>(() => DashboardRepositoryImpl(remoteDataSource: sl()));
-  sl.registerLazySingleton<DashboardRemoteDataSource>(() => DashboardRemoteDataSourceImpl(dio: sl()));
+  sl.registerLazySingleton<DashboardRepository>(
+    () => DashboardRepositoryImpl(remoteDataSource: sl()),
+  );
+  sl.registerLazySingleton<DashboardRemoteDataSource>(
+    () => DashboardRemoteDataSourceImpl(dio: sl()),
+  );
 }

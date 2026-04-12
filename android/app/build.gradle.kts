@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.reservaloya_admin"
+    namespace = "cl.reservaloya.reservaloya_admin"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -21,13 +21,19 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.reservaloya_admin"
+        applicationId = "cl.reservaloya.reservaloya_admin"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders.putAll(
+            mapOf(
+                "auth0Domain" to "dev-8obo6dl4.us.auth0.com",
+                "auth0Scheme" to "https"
+            )
+        )
     }
 
     buildTypes {
