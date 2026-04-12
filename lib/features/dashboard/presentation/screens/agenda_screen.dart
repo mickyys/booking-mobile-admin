@@ -108,7 +108,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
             },
             child: const Text('Reservar'),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -239,7 +239,6 @@ class _AgendaScreenState extends State<AgendaScreen> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -466,7 +465,15 @@ class _AgendaScreenState extends State<AgendaScreen> {
                       ),
                     )).toList(),
                   ),
-                ),
+                  Text(
+                    'PRINCIPAL',
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
