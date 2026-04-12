@@ -13,16 +13,21 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
   @override
   Future<DashboardDataModel> getDashboardData() async {
     try {
+      print('DashboardRemoteDataSource: Fetching dashboard data...');
       final response = await dio.get('/admin/dashboard');
       if (response.statusCode == 200) {
+        print('DashboardRemoteDataSource: Data fetched successfully');
         return DashboardDataModel.fromJson(response.data);
       } else {
+        print('DashboardRemoteDataSource: Failed with status ${response.statusCode}');
         throw Exception('Failed to load dashboard data: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      throw Exception('Network error while fetching dashboard data: ${e.message}');
+      print('DashboardRemoteDataSource: DioException - ${e.message}');
+      rethrow;
     } catch (e) {
-      throw Exception('Unexpected error while fetching dashboard data: $e');
+      print('DashboardRemoteDataSource: Unexpected error - $e');
+      rethrow;
     }
   }
 }
