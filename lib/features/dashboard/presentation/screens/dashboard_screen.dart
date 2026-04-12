@@ -42,7 +42,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   context.read<DashboardBloc>().add(LoadDashboardData());
                 },
                 child: CustomScrollView(
-                  physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                  physics: const ClampingScrollPhysics(),
                   slivers: [
                     SliverPadding(
                       padding: const EdgeInsets.all(24.0),

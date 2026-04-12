@@ -119,7 +119,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
       return const Center(child: Text('No hay canchas configuradas.'));
     }
 
-    return ListView.builder(
+    return ListView.builder(physics: const ClampingScrollPhysics(),
       itemCount: schedules.length,
       padding: const EdgeInsets.all(16),
       itemBuilder: (context, index) {
