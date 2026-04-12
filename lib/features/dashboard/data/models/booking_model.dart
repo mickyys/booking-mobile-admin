@@ -17,7 +17,7 @@ class BookingModel extends Booking {
 
   factory BookingModel.fromJson(Map<String, dynamic> json) {
     return BookingModel(
-      id: json['id'] ?? '',
+      id: (json['booking_id'] ?? json['id'] ?? '').toString(),
       customerName: json['customer_name'] ?? '',
       customerPhone: json['customer_phone'] ?? '',
       customerEmail: json['customer_email'] ?? '',

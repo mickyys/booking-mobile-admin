@@ -27,6 +27,7 @@ class AppNavigationBar extends StatelessWidget {
         ),
         NavigationDestination(
           icon: Icon(Icons.sports_tennis_outlined),
+          selectedIcon: Icon(Icons.sports_tennis, color: AppColors.primary),
           label: 'Canchas',
         ),
         NavigationDestination(
@@ -40,6 +41,7 @@ class AppNavigationBar extends StatelessWidget {
   int _getSelectedIndex(String path) {
     if (path.startsWith('/dashboard')) return 0;
     if (path.startsWith('/agenda')) return 1;
+    if (path.startsWith('/courts')) return 2;
     return 0;
   }
 
@@ -50,6 +52,9 @@ class AppNavigationBar extends StatelessWidget {
         break;
       case 1:
         context.go('/agenda');
+        break;
+      case 2:
+        context.go('/courts');
         break;
     }
   }
