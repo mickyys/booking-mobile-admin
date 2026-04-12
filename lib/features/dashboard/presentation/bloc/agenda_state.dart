@@ -45,3 +45,12 @@ class AgendaError extends AgendaState {
   @override
   List<Object?> get props => [message];
 }
+
+class CourtActionSuccess extends AgendaState {
+  final String message;
+
+  const CourtActionSuccess({required this.message});
+
+  @override
+  List<Object?> get props => [message];
+}

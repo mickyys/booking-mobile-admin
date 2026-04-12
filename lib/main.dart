@@ -9,6 +9,7 @@ import 'features/dashboard/presentation/bloc/dashboard_bloc.dart';
 import 'features/dashboard/presentation/bloc/agenda_bloc.dart';
 import 'features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'features/dashboard/presentation/screens/agenda_screen.dart';
+import 'features/dashboard/presentation/screens/courts_screen.dart';
 import 'injection_container.dart' as di;
 
 void main() async {
@@ -32,6 +33,10 @@ final _router = GoRouter(
     GoRoute(
       path: '/agenda',
       builder: (context, state) => const AgendaScreen(),
+    ),
+    GoRoute(
+      path: '/courts',
+      builder: (context, state) => const CourtsScreen(),
     ),
   ],
 );
