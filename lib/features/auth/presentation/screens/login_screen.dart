@@ -7,23 +7,8 @@ import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
-
-  @override
-  State<LoginScreen> createState() => _LoginScreenState();
-}
-
-class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,36 +43,30 @@ class _LoginScreenState extends State<LoginScreen> {
                     color: AppColors.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: 64),
-                TextField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Correo Electrónico',
-                    hintText: 'admin@reservaloya.cl',
+                const Spacer(),
+                Center(
+                  child: Icon(
+                    Icons.security,
+                    size: 120,
+                    color: AppColors.primary.withAlpha(50),
                   ),
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                const SizedBox(height: 24),
-                TextField(
-                  controller: _passwordController,
-                  decoration: const InputDecoration(
-                    labelText: 'Contraseña',
-                  ),
-                  obscureText: true,
                 ),
                 const Spacer(),
+                Text(
+                  'Inicie sesión de forma segura para gestionar su centro deportivo.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 32),
                 BlocBuilder<AuthBloc, AuthState>(
                   builder: (context, state) {
                     return GradientButton(
-                      text: 'Iniciar Sesión',
+                      text: 'Iniciar Sesión con Auth0',
                       isLoading: state is AuthLoading,
                       onPressed: () {
-                        context.read<AuthBloc>().add(
-                              LoginRequested(
-                                email: _emailController.text,
-                                password: _passwordController.text,
-                              ),
-                            );
+                        context.read<AuthBloc>().add(LoginRequested());
                       },
                     );
                   },

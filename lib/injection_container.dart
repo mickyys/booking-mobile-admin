@@ -1,6 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:auth0_flutter/auth0_flutter.dart';
 
 // Auth
 import 'features/auth/data/datasources/auth_remote_data_source.dart';
@@ -24,7 +25,7 @@ Future<void> init() async {
   sl.registerFactory(() => AuthBloc(loginUseCase: sl()));
   sl.registerLazySingleton(() => LoginUseCase(sl()));
   sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(remoteDataSource: sl()));
-  sl.registerLazySingleton<AuthRemoteDataSource>(() => AuthRemoteDataSourceImpl(dio: sl()));
+  sl.registerLazySingleton<AuthRemoteDataSource>(() => AuthRemoteDataSourceImpl(auth0: sl()));
 
   // Dashboard
   sl.registerFactory(() => DashboardBloc(getDashboardDataUseCase: sl()));
@@ -42,4 +43,7 @@ Future<void> init() async {
     connectTimeout: const Duration(seconds: 10),
     receiveTimeout: const Duration(seconds: 10),
   )));
+
+  // Auth0 Configuration
+  sl.registerLazySingleton(() => Auth0('dev-8obo6dl4.us.auth0.com', 'gSv4eupv6F0eRjctmIKrCNzK7Z535Xp9'));
 }

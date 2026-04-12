@@ -10,23 +10,22 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<Failure, User>> login(String email, String password) async {
+  Future<Either<Failure, User>> login() async {
     try {
-      final user = await remoteDataSource.login(email, password);
+      final user = await remoteDataSource.login();
       return Right(user);
     } catch (e) {
-      return const Left(ServerFailure('Error al iniciar sesión. Por favor, intente de nuevo.'));
+      return const Left(ServerFailure('Error al iniciar sesión con Auth0.'));
     }
   }
 
   @override
-  Future<Either<Failure, User>> getAuthenticatedUser() async {
-     // TODO: Implement persistent auth check
-     return const Left(CacheFailure());
-  }
-
-  @override
   Future<Either<Failure, void>> logout() async {
-    return const Right(null);
+    try {
+      await remoteDataSource.logout();
+      return const Right(null);
+    } catch (e) {
+      return const Left(ServerFailure('Error al cerrar sesión.'));
+    }
   }
 }

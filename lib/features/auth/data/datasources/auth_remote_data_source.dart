@@ -1,42 +1,37 @@
-import 'package:dio/dio.dart';
+import 'package:auth0_flutter/auth0_flutter.dart';
 import '../models/user_model.dart';
 
 abstract class AuthRemoteDataSource {
-  Future<UserModel> login(String email, String password);
+  Future<UserModel> login();
+  Future<void> logout();
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
-  final Dio dio;
+  final Auth0 auth0;
 
-  AuthRemoteDataSourceImpl({required this.dio});
+  AuthRemoteDataSourceImpl({required this.auth0});
 
   @override
-  Future<UserModel> login(String email, String password) async {
-    // Note: Documentation mentions Auth0, but here I'll assume a standard /login
-    // or placeholder based on provided API docs structure.
+  Future<UserModel> login() async {
     try {
-      // Mocking response for now as I don't have the exact login endpoint details from the md
-      // But I will simulate a successful login.
-      await Future.delayed(const Duration(seconds: 1));
-      return const UserModel(
-        id: '1',
-        email: 'admin@reservaloya.cl',
-        token: 'mock_jwt_token',
-      );
+      final credentials = await auth0.webAuthentication(scheme: 'demo').login();
 
-      /*
-      final response = await dio.post('/login', data: {
-        'email': email,
-        'password': password,
-      });
-      if (response.statusCode == 200) {
-        return UserModel.fromJson(response.data);
-      } else {
-        throw Exception();
-      }
-      */
+      return UserModel(
+        id: credentials.user.sub,
+        email: credentials.user.email ?? '',
+        token: credentials.accessToken,
+      );
     } catch (e) {
-      throw Exception('Login failed');
+      throw Exception('Login with Auth0 failed: $e');
+    }
+  }
+
+  @override
+  Future<void> logout() async {
+    try {
+      await auth0.webAuthentication(scheme: 'demo').logout();
+    } catch (e) {
+      throw Exception('Logout with Auth0 failed: $e');
     }
   }
 }
