@@ -59,7 +59,9 @@ class _AgendaScreenState extends State<AgendaScreen> {
   ) {
     final nameController = TextEditingController();
     final phoneController = TextEditingController();
-    final priceController = TextEditingController(text: slot.price.toInt().toString());
+    final priceController = TextEditingController(
+      text: slot.price.toInt().toString(),
+    );
     bool isBlocked = false;
 
     showDialog(
@@ -68,15 +70,24 @@ class _AgendaScreenState extends State<AgendaScreen> {
         builder: (context, setState) {
           return AlertDialog(
             backgroundColor: AppColors.surfaceHigh,
-            insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 24,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
             title: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
                   child: Text(
                     isBlocked ? 'Bloquear Horario' : 'Reserva Manual',
-                    style: GoogleFonts.manrope(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.manrope(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 Switch(
@@ -104,14 +115,31 @@ class _AgendaScreenState extends State<AgendaScreen> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.stadium_outlined, color: AppColors.primary, size: 20),
+                        const Icon(
+                          Icons.stadium_outlined,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(courtName, style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold)),
-                              Text('Hora: ${slot.hour}:00', style: GoogleFonts.inter(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.w600)),
+                              Text(
+                                courtName,
+                                style: GoogleFonts.inter(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                'Hora: ${slot.hour}:00',
+                                style: GoogleFonts.inter(
+                                  color: AppColors.primary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -125,9 +153,16 @@ class _AgendaScreenState extends State<AgendaScreen> {
                       style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
                         labelText: 'Nombre Cliente',
-                        labelStyle: const TextStyle(color: AppColors.onSurfaceVariant),
-                        prefixIcon: const Icon(Icons.person_outline, color: AppColors.onSurfaceVariant),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        labelStyle: const TextStyle(
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.person_outline,
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(color: Colors.white10),
@@ -141,9 +176,16 @@ class _AgendaScreenState extends State<AgendaScreen> {
                       style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
                         labelText: 'Teléfono',
-                        labelStyle: const TextStyle(color: AppColors.onSurfaceVariant),
-                        prefixIcon: const Icon(Icons.phone_outlined, color: AppColors.onSurfaceVariant),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        labelStyle: const TextStyle(
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.phone_outlined,
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(color: Colors.white10),
@@ -157,9 +199,16 @@ class _AgendaScreenState extends State<AgendaScreen> {
                       style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
                         labelText: 'Precio',
-                        labelStyle: const TextStyle(color: AppColors.onSurfaceVariant),
-                        prefixIcon: const Icon(Icons.attach_money, color: AppColors.onSurfaceVariant),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        labelStyle: const TextStyle(
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.attach_money,
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(color: Colors.white10),
@@ -172,12 +221,19 @@ class _AgendaScreenState extends State<AgendaScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 20),
                         child: Column(
                           children: [
-                            const Icon(Icons.block, color: AppColors.error, size: 48),
+                            const Icon(
+                              Icons.block,
+                              color: AppColors.error,
+                              size: 48,
+                            ),
                             const SizedBox(height: 16),
                             Text(
                               'Este horario quedará marcado como bloqueado y no estará disponible para reservas externas.',
                               textAlign: TextAlign.center,
-                              style: GoogleFonts.inter(color: Colors.white70, fontSize: 14),
+                              style: GoogleFonts.inter(
+                                color: Colors.white70,
+                                fontSize: 14,
+                              ),
                             ),
                           ],
                         ),
@@ -191,24 +247,40 @@ class _AgendaScreenState extends State<AgendaScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text('Cancelar', style: GoogleFonts.inter(color: AppColors.onSurfaceVariant)),
+                child: Text(
+                  'Cancelar',
+                  style: GoogleFonts.inter(color: AppColors.onSurfaceVariant),
+                ),
               ),
               const SizedBox(width: 8),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isBlocked ? AppColors.error : AppColors.primary,
-                  foregroundColor: isBlocked ? Colors.white : AppColors.onPrimary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  backgroundColor: isBlocked
+                      ? AppColors.error
+                      : AppColors.primary,
+                  foregroundColor: isBlocked
+                      ? Colors.white
+                      : AppColors.onPrimary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
                 ),
                 onPressed: () {
-                  final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
+                  final dateStr = DateFormat(
+                    'yyyy-MM-dd',
+                  ).format(_selectedDate);
                   final Map<String, dynamic> bookingData = {
                     'court_id': courtId,
                     'sport_center_id': _selectedSportCenterId,
                     'date': '${dateStr}T00:00:00Z',
                     'hour': slot.hour,
-                    'price': isBlocked ? 0.0 : (double.tryParse(priceController.text) ?? slot.price),
+                    'price': isBlocked
+                        ? 0.0
+                        : (double.tryParse(priceController.text) ?? slot.price),
                     'payment_method': 'internal',
                   };
 
@@ -219,9 +291,9 @@ class _AgendaScreenState extends State<AgendaScreen> {
                     bookingData['customer_phone'] = phoneController.text;
                   }
 
-                  context.read<AgendaBloc>().add(CreateInternalBookingEvent(
-                        bookingData: bookingData,
-                      ));
+                  context.read<AgendaBloc>().add(
+                    CreateInternalBookingEvent(bookingData: bookingData),
+                  );
                   Navigator.pop(context);
                 },
                 child: Text(isBlocked ? 'Bloquear' : 'Reservar'),
@@ -232,6 +304,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
       ),
     );
   }
+
   void _showBookingDetailsDialog(TimeSlot slot) {
     final booking = slot.booking;
     if (booking == null) return;
@@ -631,9 +704,8 @@ class _AgendaScreenState extends State<AgendaScreen> {
                               ],
                             ),
                           ),
-                        ],
-                      ),
-                    )).toList(),
+                        )
+                        .toList(),
                   ),
                 ),
               ),

@@ -41,9 +41,9 @@ class _ScheduleConfigViewState extends State<ScheduleConfigView> {
         child: BlocConsumer<ScheduleBloc, ScheduleState>(
           listener: (context, state) {
             if (state is ScheduleError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(state.message)));
             }
           },
           builder: (context, state) {
@@ -56,19 +56,23 @@ class _ScheduleConfigViewState extends State<ScheduleConfigView> {
                   .expand((sc) => sc.courts)
                   .toList();
 
-
-
-
-
               if (courts.isEmpty) {
-                return const Center(child: Text('No hay canchas disponibles', style: TextStyle(color: Colors.white)));
+                return const Center(
+                  child: Text(
+                    'No hay canchas disponibles',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                );
               }
 
               if (selectedCourt == null) {
                 selectedCourt = courts.first;
               } else {
                 // Update selectedCourt with latest data from state
-                selectedCourt = courts.firstWhere((c) => c.id == selectedCourt!.id, orElse: () => courts.first);
+                selectedCourt = courts.firstWhere(
+                  (c) => c.id == selectedCourt!.id,
+                  orElse: () => courts.first,
+                );
               }
 
               return CustomScrollView(
@@ -106,13 +110,10 @@ class _ScheduleConfigViewState extends State<ScheduleConfigView> {
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final slot = selectedCourt!.slots[index];
-                          return _buildSlotCard(context, slot);
-                        },
-                        childCount: selectedCourt!.slots.length,
-                      ),
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final slot = selectedCourt!.slots[index];
+                        return _buildSlotCard(context, slot);
+                      }, childCount: selectedCourt!.slots.length),
                     ),
                   ),
                   const SliverToBoxAdapter(child: SizedBox(height: 100)),
@@ -120,11 +121,18 @@ class _ScheduleConfigViewState extends State<ScheduleConfigView> {
               );
             }
 
-            return const Center(child: Text('Error al cargar datos', style: TextStyle(color: Colors.white)));
+            return const Center(
+              child: Text(
+                'Error al cargar datos',
+                style: TextStyle(color: Colors.white),
+              ),
+            );
           },
         ),
       ),
-      bottomNavigationBar: const AppNavigationBar(currentPath: '/schedule-config'),
+      bottomNavigationBar: const AppNavigationBar(
+        currentPath: '/schedule-config',
+      ),
     );
   }
 
@@ -162,7 +170,8 @@ class _ScheduleConfigViewState extends State<ScheduleConfigView> {
   }
 
   Widget _buildSlotCard(BuildContext context, TimeSlot slot) {
-    final timeStr = '${slot.hour.toString().padLeft(2, '0')}:${slot.minutes.toString().padLeft(2, '0')}';
+    final timeStr =
+        '${slot.hour.toString().padLeft(2, '0')}:${slot.minutes.toString().padLeft(2, '0')}';
     final isClosed = slot.status == 'closed';
 
     return Container(
@@ -186,7 +195,7 @@ class _ScheduleConfigViewState extends State<ScheduleConfigView> {
                         ),
                       ),
                       Text(
-                        '$ ${slot.price.toInt()}',
+                        '${slot.price.toInt()}',
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           color: AppColors.primary,
@@ -197,18 +206,30 @@ class _ScheduleConfigViewState extends State<ScheduleConfigView> {
                 ),
                 Column(
                   children: [
-                    Text('Abierto', style: GoogleFonts.inter(fontSize: 10, color: AppColors.onSurfaceVariant)),
+                    Text(
+                      'Abierto',
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
                     Switch(
                       value: !isClosed,
                       onChanged: (val) {
-                        _updateSlot(slot.copyWith(status: val ? 'available' : 'closed'));
+                        _updateSlot(
+                          slot.copyWith(status: val ? 'available' : 'closed'),
+                        );
                       },
                       activeColor: AppColors.primary,
                     ),
                   ],
                 ),
                 IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    color: Colors.redAccent,
+                    size: 20,
+                  ),
                   onPressed: () => _deleteSlot(slot),
                 ),
               ],
@@ -217,30 +238,29 @@ class _ScheduleConfigViewState extends State<ScheduleConfigView> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildSwitchOption(
-                  'Pago Req.',
-                  slot.paymentRequired,
-                  (val) {
-                    _updateSlot(slot.copyWith(
+                _buildSwitchOption('Pago Req.', slot.paymentRequired, (val) {
+                  _updateSlot(
+                    slot.copyWith(
                       paymentRequired: val,
                       paymentOptional: val ? false : slot.paymentOptional,
-                    ));
-                  },
-                ),
-                _buildSwitchOption(
-                  'Pago Opt.',
-                  slot.paymentOptional,
-                  (val) {
-                    _updateSlot(slot.copyWith(
+                    ),
+                  );
+                }),
+                _buildSwitchOption('Pago Opt.', slot.paymentOptional, (val) {
+                  _updateSlot(
+                    slot.copyWith(
                       paymentOptional: val,
                       paymentRequired: val ? false : slot.paymentRequired,
-                    ));
-                  },
-                ),
+                    ),
+                  );
+                }),
                 IconButton(
-                  icon: const Icon(Icons.edit_outlined, color: AppColors.onSurfaceVariant),
+                  icon: const Icon(
+                    Icons.edit_outlined,
+                    color: AppColors.onSurfaceVariant,
+                  ),
                   onPressed: () => _showEditPriceDialog(context, slot),
-                )
+                ),
               ],
             ),
           ],
@@ -249,12 +269,19 @@ class _ScheduleConfigViewState extends State<ScheduleConfigView> {
     );
   }
 
-  Widget _buildSwitchOption(String label, bool value, Function(bool) onChanged) {
+  Widget _buildSwitchOption(
+    String label,
+    bool value,
+    Function(bool) onChanged,
+  ) {
     return Row(
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(fontSize: 12, color: AppColors.onSurfaceVariant),
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            color: AppColors.onSurfaceVariant,
+          ),
         ),
         Transform.scale(
           scale: 0.8,
@@ -275,19 +302,26 @@ class _ScheduleConfigViewState extends State<ScheduleConfigView> {
   }
 
   void _deleteSlot(TimeSlot slotToDelete) {
-    final newList = selectedCourt!.slots.where((s) => s != slotToDelete).toList();
+    final newList = selectedCourt!.slots
+        .where((s) => s != slotToDelete)
+        .toList();
     context.read<ScheduleBloc>().add(
       UpdateSchedule(courtId: selectedCourt!.id, slots: newList),
     );
   }
 
   void _showEditPriceDialog(BuildContext context, TimeSlot slot) {
-    final controller = TextEditingController(text: slot.price.toInt().toString());
+    final controller = TextEditingController(
+      text: slot.price.toInt().toString(),
+    );
     showDialog(
       context: context,
       builder: (diagContext) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: Text('Editar Precio', style: GoogleFonts.manrope(color: Colors.white)),
+        title: Text(
+          'Editar Precio',
+          style: GoogleFonts.manrope(color: Colors.white),
+        ),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
@@ -295,7 +329,7 @@ class _ScheduleConfigViewState extends State<ScheduleConfigView> {
           decoration: const InputDecoration(
             labelText: 'Precio',
             labelStyle: TextStyle(color: AppColors.onSurfaceVariant),
-            prefixText: '$ ',
+            prefixText: '\$',
             prefixStyle: TextStyle(color: Colors.white),
           ),
         ),
