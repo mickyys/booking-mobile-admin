@@ -56,6 +56,10 @@ class _ScheduleConfigViewState extends State<ScheduleConfigView> {
                   .expand((sc) => sc.courts)
                   .toList();
 
+
+
+
+
               if (courts.isEmpty) {
                 return const Center(child: Text('No hay canchas disponibles', style: TextStyle(color: Colors.white)));
               }
