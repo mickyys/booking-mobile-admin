@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'schedule.dart';
 
 class SportCenter extends Equatable {
   final String id;
@@ -36,13 +37,15 @@ class AdminCourt extends Equatable {
   final String id;
   final String name;
   final String description;
+  final List<TimeSlot> slots;
 
   const AdminCourt({
     required this.id,
     required this.name,
     required this.description,
+    this.slots = const [],
   });
 
   @override
-  List<Object?> get props => [id, name, description];
+  List<Object?> get props => [id, name, description, slots];
 }

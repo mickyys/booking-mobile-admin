@@ -90,4 +90,39 @@ class DashboardRepositoryImpl implements DashboardRepository {
       return const Left(ServerFailure('Error al cancelar la reserva.'));
     }
   }
+
+  @override
+  Future<Either<Failure, Unit>> updateCourtSlot(String courtId, TimeSlot slot) async {
+    try {
+      await remoteDataSource.updateCourtSlot(courtId, {
+        'hour': slot.hour,
+        'minutes': slot.minutes,
+        'price': slot.price,
+        'status': slot.status,
+        'payment_required': slot.paymentRequired,
+        'payment_optional': slot.paymentOptional,
+      });
+      return const Right(unit);
+    } catch (e) {
+      return const Left(ServerFailure('Error al actualizar el horario.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> updateCourtSchedule(String courtId, List<TimeSlot> slots) async {
+    try {
+      final data = slots.map((slot) => {
+        'hour': slot.hour,
+        'minutes': slot.minutes,
+        'price': slot.price,
+        'status': slot.status,
+        'payment_required': slot.paymentRequired,
+        'payment_optional': slot.paymentOptional,
+      }).toList();
+      await remoteDataSource.updateCourtSchedule(courtId, data);
+      return const Right(unit);
+    } catch (e) {
+      return const Left(ServerFailure('Error al actualizar el calendario.'));
+    }
+  }
 }
