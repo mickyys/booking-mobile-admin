@@ -13,4 +13,6 @@ abstract class DashboardRepository {
   Future<Either<Failure, Unit>> deleteCourt(String courtId);
   Future<Either<Failure, Booking>> createInternalBooking(Map<String, dynamic> bookingData);
   Future<Either<Failure, Unit>> cancelBooking(String bookingId);
+  Future<Either<Failure, Unit>> updateCourtSlot(String courtId, TimeSlot slot);
+  Future<Either<Failure, Unit>> updateCourtSchedule(String courtId, List<TimeSlot> slots);
 }
