@@ -12,6 +12,8 @@ abstract class DashboardRemoteDataSource {
   Future<void> deleteCourt(String courtId);
   Future<BookingModel> createInternalBooking(Map<String, dynamic> bookingData);
   Future<void> cancelBooking(String bookingId);
+  Future<void> updateCourtSlot(String courtId, Map<String, dynamic> slotData);
+  Future<void> updateCourtSchedule(String courtId, List<Map<String, dynamic>> scheduleData);
 }
 
 class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
@@ -139,6 +141,30 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
       final response = await dio.post('/bookings/$bookingId/cancel');
       if (response.statusCode != 200) {
         throw Exception('Failed to cancel booking: ${response.statusCode}');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> updateCourtSlot(String courtId, Map<String, dynamic> slotData) async {
+    try {
+      final response = await dio.put('/admin/courts/$courtId/schedule/slot', data: slotData);
+      if (response.statusCode != 200) {
+        throw Exception('Failed to update slot: ${response.statusCode}');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> updateCourtSchedule(String courtId, List<Map<String, dynamic>> scheduleData) async {
+    try {
+      final response = await dio.put('/admin/courts/$courtId/schedule', data: scheduleData);
+      if (response.statusCode != 200) {
+        throw Exception('Failed to update schedule: ${response.statusCode}');
       }
     } catch (e) {
       rethrow;

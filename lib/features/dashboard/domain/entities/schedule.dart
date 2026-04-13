@@ -35,6 +35,26 @@ class TimeSlot extends Equatable {
     this.booking,
   });
 
+  TimeSlot copyWith({
+    int? hour,
+    int? minutes,
+    double? price,
+    String? status,
+    bool? paymentRequired,
+    bool? paymentOptional,
+    Booking? booking,
+  }) {
+    return TimeSlot(
+      hour: hour ?? this.hour,
+      minutes: minutes ?? this.minutes,
+      price: price ?? this.price,
+      status: status ?? this.status,
+      paymentRequired: paymentRequired ?? this.paymentRequired,
+      paymentOptional: paymentOptional ?? this.paymentOptional,
+      booking: booking ?? this.booking,
+    );
+  }
+
   @override
   List<Object?> get props => [
         hour,

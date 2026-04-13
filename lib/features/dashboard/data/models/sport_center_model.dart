@@ -1,4 +1,5 @@
 import '../../domain/entities/sport_center.dart';
+import 'schedule_model.dart';
 
 class SportCenterModel extends SportCenter {
   const SportCenterModel({
@@ -42,6 +43,7 @@ class AdminCourtModel extends AdminCourt {
     required super.id,
     required super.name,
     required super.description,
+    required super.slots,
   });
 
   factory AdminCourtModel.fromJson(Map<String, dynamic> json) {
@@ -49,6 +51,10 @@ class AdminCourtModel extends AdminCourt {
       id: json['id'] ?? '',
       name: json['name'] ?? '',
       description: json['description'] ?? '',
+      slots: (json['slots'] as List?)
+              ?.map((e) => TimeSlotModel.fromJson(e))
+              .toList() ??
+          [],
     );
   }
 }
