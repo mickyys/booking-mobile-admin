@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:reservaloya_admin/core/theme/app_colors.dart';
-import 'package:reservaloya_admin/core/widgets/tonal_card.dart';
-import 'package:reservaloya_admin/core/widgets/app_navigation_bar.dart';
-import 'package:reservaloya_admin/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:reservaloya_admin/features/auth/presentation/bloc/auth_state.dart';
-import 'package:reservaloya_admin/features/dashboard/presentation/bloc/dashboard_bloc.dart';
-import 'package:reservaloya_admin/features/dashboard/presentation/bloc/dashboard_event.dart';
-import 'package:reservaloya_admin/features/dashboard/presentation/bloc/dashboard_state.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_navigation_bar.dart';
+import '../../../../core/widgets/tonal_card.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_event.dart';
+import '../../../auth/presentation/bloc/auth_state.dart';
+import '../bloc/dashboard_bloc.dart';
+import '../bloc/dashboard_event.dart';
+import '../bloc/dashboard_state.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -27,10 +29,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(symbol: r'$', decimalDigits: 0);
+    final currencyFormat = NumberFormat.currency(locale: 'es_CL', symbol: '\$', decimalDigits: 0);
 
     return Scaffold(
-      body: SafeArea(
+      backgroundColor: AppColors.background,
+      body: BlocListener<AuthBloc, AuthState>(
+        listener: (context, state) {
+          if (state is AuthUnauthenticated) {
+            context.go('/login');
+          }
+        },
         child: BlocBuilder<DashboardBloc, DashboardState>(
           builder: (context, state) {
             if (state is DashboardLoading) {
@@ -42,66 +50,71 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   context.read<DashboardBloc>().add(LoadDashboardData());
                 },
                 child: CustomScrollView(
-                  physics: const ClampingScrollPhysics(),
                   slivers: [
-                    SliverPadding(
-                      padding: const EdgeInsets.all(24.0),
-                      sliver: SliverToBoxAdapter(
+                    SliverAppBar(
+                      expandedHeight: 120.0,
+                      floating: false,
+                      pinned: true,
+                      backgroundColor: AppColors.background,
+                      elevation: 0,
+                      actions: [
+                        IconButton(
+                          icon: const Icon(Icons.logout, color: AppColors.error),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Cerrar Sesión'),
+                                content: const Text('¿Estás seguro de que deseas salir?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('Cancelar'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                      context.read<AuthBloc>().add(LogoutRequested());
+                                    },
+                                    child: const Text('Salir', style: TextStyle(color: AppColors.error)),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                      flexibleSpace: FlexibleSpaceBar(
+                        centerTitle: false,
+                        titlePadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                        title: Text(
+                          'Dashboard',
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                color: AppColors.onSurface,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                      ),
+                    ),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            BlocBuilder<AuthBloc, AuthState>(
-                              builder: (context, authState) {
-                                String userIdentifier = 'Administrador';
-                                if (authState is AuthAuthenticated) {
-                                  userIdentifier = authState.user.email;
-                                }
-                                return Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Bienvenido,',
-                                            style: Theme.of(context).textTheme.labelMedium,
-                                          ),
-                                          Text(
-                                            userIdentifier,
-                                            style: Theme.of(context).textTheme.headlineSmall,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const CircleAvatar(
-                                      backgroundColor: AppColors.surfaceHighest,
-                                      child: Icon(Icons.person, color: AppColors.primary),
-                                    ),
-                                  ],
-                                );
-                              },
-                            ),
-                            const SizedBox(height: 32),
-                            Text(
-                              'Resumen de Hoy',
-                              style: Theme.of(context).textTheme.titleLarge,
-                            ),
-                            const SizedBox(height: 16),
                             Row(
                               children: [
                                 Expanded(
                                   child: _StatCard(
-                                    title: 'Ventas Hoy',
-                                    value: currencyFormat.format(data.todayRevenue),
+                                    title: 'Ingresos Totales',
+                                    value: currencyFormat.format(data.totalRevenue),
                                     color: AppColors.primary,
                                   ),
                                 ),
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: _StatCard(
-                                    title: 'Reservas',
+                                    title: 'Reservas Hoy',
                                     value: data.todayBookingsCount.toString(),
                                     color: AppColors.onSurface,
                                   ),
