@@ -10,6 +10,7 @@ import 'features/auth/data/datasources/auth_remote_data_source.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/domain/usecases/login_usecase.dart';
+import 'features/auth/domain/usecases/social_login_usecase.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 
 // Dashboard
@@ -50,8 +51,12 @@ Future<void> init() async {
 
   //! Features
   // Auth
-  sl.registerFactory(() => AuthBloc(loginUseCase: sl()));
+  sl.registerFactory(() => AuthBloc(
+        loginUseCase: sl(),
+        socialLoginUseCase: sl(),
+      ));
   sl.registerLazySingleton(() => LoginUseCase(sl()));
+  sl.registerLazySingleton(() => SocialLoginUseCase(sl()));
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(remoteDataSource: sl(), sharedPreferences: sl()),
   );

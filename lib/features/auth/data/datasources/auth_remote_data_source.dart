@@ -4,6 +4,7 @@ import '../../../../core/config/app_config.dart';
 
 abstract class AuthRemoteDataSource {
   Future<UserModel> login(String email, String password);
+  Future<UserModel> loginWithSocial(String connection);
   Future<void> logout();
 }
 
@@ -16,7 +17,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<UserModel> login(String email, String password) async {
     try {
       print('AUTH REMOTE: Attempting login for: $email');
-      print('AUTH REMOTE: Password length: ${password.length}');
 
       final credentials = await auth0.api.login(
         usernameOrEmail: email,
@@ -26,29 +26,47 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         scopes: {'openid', 'profile', 'email'},
       );
 
-      print(
-        'AUTH REMOTE: Login successful for user id: ${credentials.user.sub}',
-      );
-      print(
-        'AUTH REMOTE: User email returned: ${credentials.user.email ?? email}',
-      );
-      print(
-        'AUTH REMOTE: Access token length: ${credentials.accessToken?.length ?? 0}',
-      );
-
       return UserModel(
         id: credentials.user.sub,
         email: credentials.user.email ?? email,
         token: credentials.accessToken,
       );
-    } catch (e, st) {
-      print('AUTH REMOTE: Login failed for $email');
-      print('AUTH REMOTE: Error: $e');
-      print('AUTH REMOTE: StackTrace: $st');
-      throw Exception('Login with credentials failed: $e');
+    } catch (e) {
+      print('AUTH REMOTE: Login failed: $e');
+      throw Exception('Login failed: $e');
     }
   }
 
   @override
-  Future<void> logout() async {}
+  Future<UserModel> loginWithSocial(String connection) async {
+    try {
+      print('AUTH REMOTE: Attempting social login with: $connection');
+
+      // Using parameters map as a safer way if 'connection' named param is causing issues in this environment
+      final credentials = await auth0.webAuthentication().login(
+            audience: AppConfig.auth0Audience,
+            scopes: {'openid', 'profile', 'email'},
+            parameters: {'connection': connection},
+          );
+
+      return UserModel(
+        id: credentials.user.sub,
+        email: credentials.user.email ?? '',
+        token: credentials.accessToken,
+      );
+    } catch (e) {
+      print('AUTH REMOTE: Social login failed: $e');
+      throw Exception('Social login failed: $e');
+    }
+  }
+
+  @override
+  Future<void> logout() async {
+    try {
+      await auth0.webAuthentication().logout();
+    } catch (e) {
+      print('AUTH REMOTE: Logout failed: $e');
+      throw Exception('Logout failed: $e');
+    }
+  }
 }

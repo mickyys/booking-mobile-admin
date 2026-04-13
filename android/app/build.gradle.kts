@@ -33,7 +33,7 @@ android {
         manifestPlaceholders.putAll(
             mapOf(
                 "auth0Domain" to auth0DomainValue,
-                "auth0Scheme" to "https"
+                "auth0Scheme" to "demo"
             )
         )
     }
