@@ -17,4 +17,13 @@ class LoginRequested extends AuthEvent {
   List<Object> get props => [email, password];
 }
 
+class SocialLoginRequested extends AuthEvent {
+  final String connection;
+
+  const SocialLoginRequested({required this.connection});
+
+  @override
+  List<Object> get props => [connection];
+}
+
 class LogoutRequested extends AuthEvent {}
