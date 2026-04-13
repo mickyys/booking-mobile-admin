@@ -26,6 +26,17 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, User>> loginWithSocial(String connection) async {
+    try {
+      final user = await remoteDataSource.loginWithSocial(connection);
+      await sharedPreferences.setString('jwt_token', user.token);
+      return Right(user);
+    } catch (e) {
+      return const Left(ServerFailure('Error en la autenticación social.'));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> logout() async {
     try {
       await remoteDataSource.logout();

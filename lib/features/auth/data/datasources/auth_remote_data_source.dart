@@ -4,6 +4,7 @@ import '../../../../core/config/app_config.dart';
 
 abstract class AuthRemoteDataSource {
   Future<UserModel> login(String email, String password);
+  Future<UserModel> loginWithSocial(String connection);
   Future<void> logout();
 }
 
@@ -33,7 +34,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         'AUTH REMOTE: User email returned: ${credentials.user.email ?? email}',
       );
       print(
-        'AUTH REMOTE: Access token length: ${credentials.accessToken?.length ?? 0}',
+        'AUTH REMOTE: Access token length: ${credentials.accessToken.length}',
       );
 
       return UserModel(
@@ -50,5 +51,39 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<void> logout() async {}
+  Future<UserModel> loginWithSocial(String connection) async {
+    try {
+      print('AUTH REMOTE: Attempting social login with: $connection');
+
+      final credentials = await auth0.webAuthentication().login(
+            audience: AppConfig.auth0Audience,
+            scopes: {'openid', 'profile', 'email'},
+          );
+
+      print(
+        'AUTH REMOTE: Social login successful for user id: ${credentials.user.sub}',
+      );
+
+      return UserModel(
+        id: credentials.user.sub,
+        email: credentials.user.email ?? '',
+        token: credentials.accessToken,
+      );
+    } catch (e, st) {
+      print('AUTH REMOTE: Social login failed for $connection');
+      print('AUTH REMOTE: Error: $e');
+      print('AUTH REMOTE: StackTrace: $st');
+      throw Exception('Social login failed: $e');
+    }
+  }
+
+  @override
+  Future<void> logout() async {
+    try {
+      await auth0.webAuthentication().logout();
+    } catch (e) {
+      print('AUTH REMOTE: Logout failed: $e');
+      throw Exception('Logout failed: $e');
+    }
+  }
 }
