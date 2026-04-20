@@ -644,7 +644,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
-        color: isSelected ? const Color(0xFF1B2634) : Colors.transparent,
+        color: isSelected ? const AppColors.surfaceLow : Colors.transparent,
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
@@ -877,7 +877,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
             height: 80,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF3E4A59),
+              color: const AppColors.surfaceHigh,
               borderRadius: BorderRadius.circular(12),
               border: Border(
                 left: BorderSide(
