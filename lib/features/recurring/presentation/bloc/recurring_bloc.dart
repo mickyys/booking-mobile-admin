@@ -3,6 +3,7 @@ import '../../domain/entities/recurring_series.dart';
 import '../../domain/usecases/get_recurring_series_usecase.dart';
 import '../../domain/usecases/cancel_recurring_reservation_usecase.dart';
 import '../../domain/usecases/delete_series_usecase.dart';
+import '../../domain/usecases/create_recurring_reservation_usecase.dart';
 
 // Events
 abstract class RecurringEvent {
@@ -37,11 +38,13 @@ class RecurringBloc extends Bloc<RecurringEvent, RecurringState> {
   final GetRecurringSeriesUseCase getRecurringSeriesUseCase;
   final CancelRecurringReservationUseCase cancelRecurringReservationUseCase;
   final DeleteSeriesUseCase deleteSeriesUseCase;
+  final CreateRecurringReservationUseCase createRecurringReservationUseCase;
 
   RecurringBloc({
     required this.getRecurringSeriesUseCase,
     required this.cancelRecurringReservationUseCase,
     required this.deleteSeriesUseCase,
+    required this.createRecurringReservationUseCase,
   }) : super(RecurringInitial()) {
     on<LoadRecurringSeries>(_onLoad);
     on<CancelReservation>(_onCancel);

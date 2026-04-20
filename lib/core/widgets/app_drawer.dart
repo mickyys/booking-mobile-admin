@@ -91,6 +91,16 @@ class AppDrawer extends StatelessWidget {
                   ),
                 ),
                 const Divider(color: Colors.white10, height: 1),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'Versión 1.0.0',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ),
                 _buildLogoutItem(context),
               ],
             );

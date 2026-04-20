@@ -206,57 +206,20 @@ class _LoginScreenState extends State<LoginScreen> {
                               }
                             },
                           ),
-                          const SizedBox(height: 24),
-                          Row(
-                            children: [
-                              const Expanded(child: Divider()),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
-                                child: Text(
-                                  'O continuar con',
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: AppColors.onSurfaceVariant,
-                                      ),
-                                ),
-                              ),
-                              const Expanded(child: Divider()),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-                          OutlinedButton(
-                            onPressed: state is AuthLoading
-                                ? null
-                                : () {
-                                    context.read<AuthBloc>().add(
-                                          const SocialLoginRequested(connection: 'google-oauth2'),
-                                        );
-                                  },
-                            style: OutlinedButton.styleFrom(
-                              minimumSize: const Size(double.infinity, 56),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                              side: const BorderSide(color: AppColors.outline),
-                            ),
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.g_mobiledata, size: 32, color: AppColors.onSurface),
-                                SizedBox(width: 12),
-                                Text(
-                                  'Google',
-                                  style: TextStyle(
-                                    color: AppColors.onSurface,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                          const SizedBox(height: 48),
                         ],
                       );
                     },
                   ),
                   const SizedBox(height: 48),
+                  Center(
+                    child: Text(
+                      'Versión 1.0.0',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                    ),
+                  ),
                 ],
               ),
             ),

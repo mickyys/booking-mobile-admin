@@ -1,4 +1,4 @@
-package cl.reservaloya.reservaloya_admin
+package cl.reservaloya.reservaloya
 
 import io.flutter.embedding.android.FlutterActivity
 

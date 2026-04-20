@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "cl.reservaloya.reservaloya_admin"
+    namespace = "cl.reservaloya.reservaloya"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -20,8 +20,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "cl.reservaloya.reservaloya_admin"
+        applicationId = "cl.reservaloya.reservaloya"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion // auth0_flutter requires minSdk 21
