@@ -37,6 +37,21 @@ class AgendaLoaded extends AgendaState {
   List<Object?> get props => [schedules, selectedDate, selectedSportCenterId];
 }
 
+class WeekAgendaLoaded extends AgendaState {
+  final Map<String, List<CourtSchedule>> weeklySchedules;
+  final String startDate;
+  final String selectedSportCenterId;
+
+  const WeekAgendaLoaded({
+    required this.weeklySchedules,
+    required this.startDate,
+    required this.selectedSportCenterId,
+  });
+
+  @override
+  List<Object?> get props => [weeklySchedules, startDate, selectedSportCenterId];
+}
+
 class AgendaError extends AgendaState {
   final String message;
 

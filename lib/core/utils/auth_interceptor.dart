@@ -7,17 +7,28 @@ class AuthInterceptor extends Interceptor {
   AuthInterceptor({required this.sharedPreferences});
 
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    final token = sharedPreferences.getString('jwt_token');
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+    final token = await sharedPreferences.getString('jwt_token');
     final fullUrl = '${options.baseUrl}${options.path}';
+    final queryString = options.queryParameters.isNotEmpty 
+        ? '?${options.queryParameters.entries.map((e) => '${e.key}=${e.value}').join('&')}' 
+        : '';
 
-    print('DIO REQUEST: [${options.method}] $fullUrl');
-
+    print('🔌 DIO REQUEST: [${options.method}] $fullUrl$queryString');
+    print('🌐 BASE URL: ${options.baseUrl}');
     if (token != null) {
+      print('🔑 TOKEN: $token');
+      try {
+        final parts = token.split('.');
+        if (parts.length == 3) {
+          final payload = parts[1];
+          print('📋 TOKEN PAYLOAD: $payload');
+        }
+      } catch (e) {}
+      print('🔗 CURL: curl -X GET "$fullUrl$queryString" -H "Authorization: Bearer $token" -H "Content-Type: application/json"');
       options.headers['Authorization'] = 'Bearer $token';
-      print('AUTH: Token attached to request');
     } else {
-      print('AUTH: No token found in SharedPreferences');
+      print('⚠️ NO TOKEN FOUND');
     }
 
     super.onRequest(options, handler);

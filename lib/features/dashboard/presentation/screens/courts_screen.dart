@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:reservaloya_admin/core/theme/app_colors.dart';
 import 'package:reservaloya_admin/core/widgets/app_navigation_bar.dart';
+import 'package:reservaloya_admin/core/widgets/app_drawer.dart';
 import '../bloc/agenda_bloc.dart';
 import '../bloc/agenda_event.dart';
 import '../bloc/agenda_state.dart';
@@ -153,6 +154,7 @@ class _CourtsScreenState extends State<CourtsScreen> {
       },
       child: Scaffold(
         backgroundColor: AppColors.background,
+        drawer: const AppDrawer(),
         body: SafeArea(
           child: BlocBuilder<AgendaBloc, AgendaState>(
             builder: (context, state) {
@@ -185,24 +187,37 @@ class _CourtsScreenState extends State<CourtsScreen> {
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(
-            'CONFIGURACIÓN',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppColors.onSurfaceVariant,
-              letterSpacing: 1.2,
+          Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.menu),
+              onPressed: () => Scaffold.of(context).openDrawer(),
             ),
           ),
-          Text(
-            'Gestión de Canchas',
-            style: GoogleFonts.manrope(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'CONFIGURACIÓN',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.onSurfaceVariant,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                Text(
+                  'Gestión de Canchas',
+                  style: GoogleFonts.manrope(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

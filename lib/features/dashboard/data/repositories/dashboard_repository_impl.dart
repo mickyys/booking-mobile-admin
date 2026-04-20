@@ -6,15 +6,17 @@ import '../../domain/entities/sport_center.dart';
 import '../../domain/repositories/dashboard_repository.dart';
 import '../datasources/dashboard_remote_data_source.dart';
 
+import '../../domain/usecases/get_dashboard_data_usecase.dart';
+
 class DashboardRepositoryImpl implements DashboardRepository {
   final DashboardRemoteDataSource remoteDataSource;
 
   DashboardRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<Failure, DashboardData>> getDashboardData() async {
+  Future<Either<Failure, DashboardData>> getDashboardData({DashboardParams? params}) async {
     try {
-      final data = await remoteDataSource.getDashboardData();
+      final data = await remoteDataSource.getDashboardData(params: params);
       return Right(data);
     } catch (e) {
       return const Left(ServerFailure('Error al cargar datos del dashboard.'));
@@ -101,6 +103,8 @@ class DashboardRepositoryImpl implements DashboardRepository {
         'status': slot.status,
         'payment_required': slot.paymentRequired,
         'payment_optional': slot.paymentOptional,
+        'partial_payment_enabled': slot.partialPaymentEnabled,
+        'day_of_week': slot.dayOfWeek,
       });
       return const Right(unit);
     } catch (e) {
@@ -118,11 +122,43 @@ class DashboardRepositoryImpl implements DashboardRepository {
         'status': slot.status,
         'payment_required': slot.paymentRequired,
         'payment_optional': slot.paymentOptional,
+        'partial_payment_enabled': slot.partialPaymentEnabled,
+        if (slot.dayOfWeek != null) 'day_of_week': slot.dayOfWeek,
       }).toList();
       await remoteDataSource.updateCourtSchedule(courtId, data);
       return const Right(unit);
     } catch (e) {
       return const Left(ServerFailure('Error al actualizar el calendario.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, AdminSportCenter>> getSportCenterSettings(String id) async {
+    try {
+      final data = await remoteDataSource.getSportCenterSettings(id);
+      return Right(data);
+    } catch (e) {
+      return const Left(ServerFailure('Error al cargar la configuración del centro.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> updateSportCenter(String id, Map<String, dynamic> data) async {
+    try {
+      await remoteDataSource.updateSportCenter(id, data);
+      return const Right(unit);
+    } catch (e) {
+      return const Left(ServerFailure('Error al actualizar el centro.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> updateSportCenterSettings(String id, Map<String, dynamic> settings) async {
+    try {
+      await remoteDataSource.updateSportCenterSettings(id, settings);
+      return const Right(unit);
+    } catch (e) {
+      return const Left(ServerFailure('Error al actualizar la configuración.'));
     }
   }
 }

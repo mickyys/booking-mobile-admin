@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../features/dashboard/presentation/bloc/dashboard_bloc.dart';
+import '../../features/dashboard/presentation/bloc/dashboard_state.dart';
 import '../theme/app_colors.dart';
 
 class AppNavigationBar extends StatelessWidget {
@@ -36,8 +39,9 @@ class AppNavigationBar extends StatelessWidget {
           label: 'Horarios',
         ),
         NavigationDestination(
-          icon: Icon(Icons.settings_outlined),
-          label: 'Ajustes',
+          icon: Icon(Icons.repeat_outlined),
+          selectedIcon: Icon(Icons.repeat, color: AppColors.primary),
+          label: 'Reservas',
         ),
       ],
     );
@@ -48,7 +52,7 @@ class AppNavigationBar extends StatelessWidget {
     if (path.startsWith('/agenda')) return 1;
     if (path.startsWith('/courts')) return 2;
     if (path.startsWith('/schedule-config')) return 3;
-    if (path.startsWith('/settings')) return 4;
+    if (path.startsWith('/recurring')) return 4;
     return 0;
   }
 
@@ -67,7 +71,7 @@ class AppNavigationBar extends StatelessWidget {
         context.go('/schedule-config');
         break;
       case 4:
-        // context.go('/settings');
+        context.go('/recurring');
         break;
     }
   }

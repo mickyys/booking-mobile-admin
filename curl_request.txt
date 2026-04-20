@@ -1,0 +1,12 @@
+# Ejemplo de curl - REEMPLAZAR CON EL TOKEN QUE APARECE EN CONSOLA
+# Buscar en la consola del emulador/Android Studio el log "🔐 CURL: curl..."
+
+# Dashboard con fecha
+curl -X GET "http://10.0.2.2:8080/api/admin/dashboard?date=2026-04-19&page=1" \
+  -H "Authorization: Bearer [PEGAR_TOKEN_AQUI]" \
+  -H "Content-Type: application/json"
+
+# Agenda
+curl -X GET "http://10.0.2.2:8080/api/sport-centers/[SPORT_CENTER_ID]/schedules/bookings?date=2026-04-19&all=true" \
+  -H "Authorization: Bearer [PEGAR_TOKEN_AQUI]" \
+  -H "Content-Type: application/json"

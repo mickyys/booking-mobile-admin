@@ -7,6 +7,7 @@ class SportCenter extends Equatable {
   final String slug;
   final String city;
   final String address;
+  final String? imageUrl;
 
   const SportCenter({
     required this.id,
@@ -14,10 +15,46 @@ class SportCenter extends Equatable {
     required this.slug,
     required this.city,
     required this.address,
+    this.imageUrl,
   });
 
   @override
-  List<Object?> get props => [id, name, slug, city, address];
+  List<Object?> get props => [id, name, slug, city, address, imageUrl];
+}
+
+class SportCenterSettings extends Equatable {
+  final int cancellationHours;
+  final double cancellationRetention;
+  final bool partialPaymentEnabled;
+  final double partialPaymentPercentage;
+
+  const SportCenterSettings({
+    required this.cancellationHours,
+    required this.cancellationRetention,
+    required this.partialPaymentEnabled,
+    required this.partialPaymentPercentage,
+  });
+
+  @override
+  List<Object?> get props => [
+        cancellationHours,
+        cancellationRetention,
+        partialPaymentEnabled,
+        partialPaymentPercentage,
+      ];
+}
+
+class AdminSportCenter extends Equatable {
+  final SportCenter sportCenter;
+  final SportCenterSettings settings;
+
+  const AdminSportCenter({
+    required this.sportCenter,
+    required this.settings,
+  });
+
+  @override
+  List<Object?> get props => [sportCenter, settings];
 }
 
 class AdminSportCenterCourts extends Equatable {

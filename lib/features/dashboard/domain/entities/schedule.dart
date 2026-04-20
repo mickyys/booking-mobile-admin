@@ -23,6 +23,8 @@ class TimeSlot extends Equatable {
   final String status;
   final bool paymentRequired;
   final bool paymentOptional;
+  final bool partialPaymentEnabled;
+  final int? dayOfWeek;
   final Booking? booking;
 
   const TimeSlot({
@@ -32,6 +34,8 @@ class TimeSlot extends Equatable {
     required this.status,
     required this.paymentRequired,
     required this.paymentOptional,
+    this.partialPaymentEnabled = false,
+    this.dayOfWeek,
     this.booking,
   });
 
@@ -42,6 +46,8 @@ class TimeSlot extends Equatable {
     String? status,
     bool? paymentRequired,
     bool? paymentOptional,
+    bool? partialPaymentEnabled,
+    int? dayOfWeek,
     Booking? booking,
   }) {
     return TimeSlot(
@@ -51,6 +57,8 @@ class TimeSlot extends Equatable {
       status: status ?? this.status,
       paymentRequired: paymentRequired ?? this.paymentRequired,
       paymentOptional: paymentOptional ?? this.paymentOptional,
+      partialPaymentEnabled: partialPaymentEnabled ?? this.partialPaymentEnabled,
+      dayOfWeek: dayOfWeek ?? this.dayOfWeek,
       booking: booking ?? this.booking,
     );
   }
@@ -63,9 +71,12 @@ class TimeSlot extends Equatable {
         status,
         paymentRequired,
         paymentOptional,
+        partialPaymentEnabled,
+        dayOfWeek,
         booking,
       ];
 
   bool get isAvailable => status == 'available';
   bool get isBlocked => status == 'closed' || status == 'blocked';
+  bool get isGeneral => dayOfWeek == null;
 }

@@ -30,8 +30,16 @@ class _AgendaScreenState extends State<AgendaScreen> {
     context.read<AgendaBloc>().add(LoadAdminCourts());
 
     _horizontalBodyController.addListener(() {
-      if (_horizontalHeaderController.hasClients) {
+      if (_horizontalHeaderController.hasClients &&
+          _horizontalHeaderController.offset != _horizontalBodyController.offset) {
         _horizontalHeaderController.jumpTo(_horizontalBodyController.offset);
+      }
+    });
+
+    _horizontalHeaderController.addListener(() {
+      if (_horizontalBodyController.hasClients &&
+          _horizontalBodyController.offset != _horizontalHeaderController.offset) {
+        _horizontalBodyController.jumpTo(_horizontalHeaderController.offset);
       }
     });
   }
@@ -658,31 +666,39 @@ class _AgendaScreenState extends State<AgendaScreen> {
     }
     final sortedHours = hours.toList()..sort();
 
-    const double hourColWidth = 70.0;
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final double availableWidth = screenWidth - 32 - hourColWidth;
-    final double columnWidth = schedules.length <= 2
-        ? availableWidth / schedules.length
-        : 140.0;
+    const double hourColWidth = 80.0;
+    const double columnWidth = 140.0;
 
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+        // Court Headers (Sticky vertically, scrollable horizontally)
+        Container(
+          padding: const EdgeInsets.only(bottom: 8),
           child: Row(
             children: [
-              const SizedBox(width: hourColWidth),
+              SizedBox(
+                width: hourColWidth,
+                child: Center(
+                  child: Text(
+                    'Hora',
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ),
               Expanded(
                 child: SingleChildScrollView(
-                  controller: _horizontalHeaderController,
                   scrollDirection: Axis.horizontal,
-                  physics: const ClampingScrollPhysics(),
+                  controller: _horizontalHeaderController,
                   child: Row(
                     children: schedules
                         .map(
                           (court) => Container(
                             width: columnWidth,
-                            padding: const EdgeInsets.only(bottom: 8),
+                            alignment: Alignment.center,
                             child: Column(
                               children: [
                                 Text(
@@ -712,84 +728,93 @@ class _AgendaScreenState extends State<AgendaScreen> {
             ],
           ),
         ),
-
+        // Body (Scrollable vertically)
         Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              controller: _horizontalBodyController,
-              physics: const ClampingScrollPhysics(),
-              child: SizedBox(
-                width: hourColWidth + (columnWidth * schedules.length),
-                child: ListView.builder(
-                  itemCount: sortedHours.length,
-                  itemBuilder: (context, index) {
-                    final hour = sortedHours[index];
-                    return SizedBox(
-                      height: 100,
-                      child: Row(
-                        children: [
-                          Container(
-                            width: hourColWidth,
-                            alignment: Alignment.centerRight,
-                            padding: const EdgeInsets.only(right: 16),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  '${hour.toString().padLeft(2, '0')}:00',
-                                  style: GoogleFonts.manrope(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
+          child: SingleChildScrollView(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Fixed Hours Column
+                SizedBox(
+                  width: hourColWidth,
+                  child: Column(
+                    children: sortedHours.map((hour) {
+                      return SizedBox(
+                        height: 100,
+                        child: Container(
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 16),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                '${hour.toString().padLeft(2, '0')}:00',
+                                style: GoogleFonts.manrope(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
                                 ),
-                                Text(
-                                  hour < 12 ? 'AM' : 'PM',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 10,
-                                    color: AppColors.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          ...schedules.map((court) {
-                            TimeSlot? foundSlot;
-                            for (final s in court.slots) {
-                              if (s.hour == hour) {
-                                foundSlot = s;
-                                break;
-                              }
-                            }
-                            final slot =
-                                foundSlot ??
-                                TimeSlot(
-                                  hour: hour,
-                                  minutes: 0,
-                                  price: 0.0,
-                                  status: 'closed',
-                                  paymentRequired: false,
-                                  paymentOptional: false,
-                                );
-                            return Container(
-                              width: columnWidth,
-                              padding: const EdgeInsets.all(4),
-                              child: _buildSlotCard(
-                                slot,
-                                court.courtId,
-                                court.courtName,
                               ),
-                            );
-                          }).toList(),
-                        ],
-                      ),
-                    );
-                  },
+                              Text(
+                                hour < 12 ? 'AM' : 'PM',
+                                style: GoogleFonts.inter(
+                                  fontSize: 10,
+                                  color: AppColors.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
                 ),
-              ),
+                // Scrollable Court Slots Grid
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    controller: _horizontalBodyController,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: sortedHours.map((hour) {
+                        return SizedBox(
+                          height: 100,
+                          child: Row(
+                            children: schedules.map((court) {
+                              TimeSlot? foundSlot;
+                              for (final s in court.slots) {
+                                if (s.hour == hour) {
+                                  foundSlot = s;
+                                  break;
+                                }
+                              }
+                              final slot = foundSlot ??
+                                  TimeSlot(
+                                    hour: hour,
+                                    minutes: 0,
+                                    price: 0.0,
+                                    status: 'closed',
+                                    paymentRequired: false,
+                                    paymentOptional: false,
+                                  );
+                              return Container(
+                                width: columnWidth,
+                                padding: const EdgeInsets.all(4),
+                                child: _buildSlotCard(
+                                  slot,
+                                  court.courtId,
+                                  court.courtName,
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

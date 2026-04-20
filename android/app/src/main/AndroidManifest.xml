@@ -31,7 +31,7 @@
             android:name="com.auth0.android.provider.RedirectActivity"
             android:exported="true">
 
-            <intent-filter android:autoVerify="true">
+            <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
 
                 <category android:name="android.intent.category.DEFAULT"/>

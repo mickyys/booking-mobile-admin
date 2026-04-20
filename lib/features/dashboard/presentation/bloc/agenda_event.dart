@@ -19,6 +19,16 @@ class LoadAgendaData extends AgendaEvent {
   List<Object> get props => [sportCenterId, date];
 }
 
+class LoadWeekAgendaData extends AgendaEvent {
+  final String sportCenterId;
+  final String startDate;
+
+  const LoadWeekAgendaData({required this.sportCenterId, required this.startDate});
+
+  @override
+  List<Object> get props => [sportCenterId, startDate];
+}
+
 class AddCourt extends AgendaEvent {
   final String sportCenterId;
   final String name;
@@ -80,4 +90,13 @@ class CancelBookingEvent extends AgendaEvent {
 
   @override
   List<Object> get props => [bookingId, sportCenterId, date];
+}
+
+class CreateRecurringReservationEvent extends AgendaEvent {
+  final Map<String, dynamic> bookingData;
+
+  const CreateRecurringReservationEvent({required this.bookingData});
+
+  @override
+  List<Object> get props => [bookingData];
 }

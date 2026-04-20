@@ -26,12 +26,15 @@ class TimeSlotModel extends TimeSlot {
     required super.status,
     required super.paymentRequired,
     required super.paymentOptional,
+    super.partialPaymentEnabled,
+    super.dayOfWeek,
     super.booking,
   });
 
   factory TimeSlotModel.fromJson(Map<String, dynamic> json) {
     final status = (json['status'] ?? 'available').toString();
     final hasBooking = json['booking_id'] != null;
+    print('🏷️ Slot status: $status, booking_id: ${json['booking_id']}');
 
     return TimeSlotModel(
       hour: json['hour'] ?? 0,
@@ -40,6 +43,8 @@ class TimeSlotModel extends TimeSlot {
       status: status,
       paymentRequired: json['payment_required'] ?? false,
       paymentOptional: json['payment_optional'] ?? false,
+      partialPaymentEnabled: json['partial_payment_enabled'] ?? false,
+      dayOfWeek: json['day_of_week'],
       booking: hasBooking ? BookingModel.fromJson(json) : null,
     );
   }

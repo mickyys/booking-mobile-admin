@@ -28,6 +28,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       return UserModel(
         id: credentials.user.sub,
+        name: credentials.user.name ?? email,
         email: credentials.user.email ?? email,
         token: credentials.accessToken,
       );
@@ -43,7 +44,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       print('AUTH REMOTE: Attempting social login with: $connection');
 
       // Using parameters map as a safer way if 'connection' named param is causing issues in this environment
-      final credentials = await auth0.webAuthentication().login(
+      final credentials = await auth0.webAuthentication(scheme: 'reservaloya').login(
             audience: AppConfig.auth0Audience,
             scopes: {'openid', 'profile', 'email'},
             parameters: {'connection': connection},
@@ -51,6 +52,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       return UserModel(
         id: credentials.user.sub,
+        name: credentials.user.name ?? '',
         email: credentials.user.email ?? '',
         token: credentials.accessToken,
       );
@@ -63,7 +65,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> logout() async {
     try {
-      await auth0.webAuthentication().logout();
+      await auth0.webAuthentication(scheme: 'reservaloya').logout();
     } catch (e) {
       print('AUTH REMOTE: Logout failed: $e');
       throw Exception('Logout failed: $e');

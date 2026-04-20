@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_navigation_bar.dart';
+import '../../../../core/widgets/app_drawer.dart';
 import '../../../../core/widgets/tonal_card.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
@@ -21,18 +22,34 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String? _selectedStatus;
+  DateTime? _selectedDate;
+  int _currentPage = 1;
+
   @override
   void initState() {
     super.initState();
-    context.read<DashboardBloc>().add(LoadDashboardData());
+    _loadData();
+  }
+
+  void _loadData() {
+    context.read<DashboardBloc>().add(LoadDashboardData(
+      customerName: _searchController.text.isNotEmpty ? _searchController.text : null,
+      status: _selectedStatus,
+      date: _selectedDate != null ? DateFormat('yyyy-MM-dd').format(_selectedDate!) : null,
+      page: _currentPage,
+    ));
   }
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(locale: 'es_CL', symbol: '\$', decimalDigits: 0);
+    final currencyFormat = NumberFormat.currency(locale: 'es_AR', symbol: '', decimalDigits: 0);
+    String formatCLP(num value) => '\$ ${NumberFormat('#,###', 'es_CL').format(value)}';
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      drawer: const AppDrawer(),
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthUnauthenticated) {
@@ -47,7 +64,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               final data = state.data;
               return RefreshIndicator(
                 onRefresh: () async {
-                  context.read<DashboardBloc>().add(LoadDashboardData());
+                  _loadData();
                 },
                 child: CustomScrollView(
                   slivers: [
@@ -57,33 +74,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       pinned: true,
                       backgroundColor: AppColors.background,
                       elevation: 0,
-                      actions: [
-                        IconButton(
-                          icon: const Icon(Icons.logout, color: AppColors.error),
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('Cerrar Sesión'),
-                                content: const Text('¿Estás seguro de que deseas salir?'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text('Cancelar'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.pop(context);
-                                      context.read<AuthBloc>().add(LogoutRequested());
-                                    },
-                                    child: const Text('Salir', style: TextStyle(color: AppColors.error)),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+                      leading: Builder(
+                        builder: (context) => IconButton(
+                          icon: const Icon(Icons.menu),
+                          onPressed: () => Scaffold.of(context).openDrawer(),
                         ),
-                      ],
+                      ),
                       flexibleSpace: FlexibleSpaceBar(
                         centerTitle: false,
                         titlePadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -98,7 +94,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.all(24.0),
+                        padding: const EdgeInsets.all(16.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -106,25 +102,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               children: [
                                 Expanded(
                                   child: _StatCard(
-                                    title: 'Ingresos Totales',
-                                    value: currencyFormat.format(data.totalRevenue),
+                                    title: 'Ingresos',
+                                    value: formatCLP(data.totalRevenue),
                                     color: AppColors.primary,
                                   ),
                                 ),
-                                const SizedBox(width: 16),
+                                const SizedBox(width: 12),
                                 Expanded(
                                   child: _StatCard(
-                                    title: 'Reservas Hoy',
+                                    title: 'Hoy',
                                     value: data.todayBookingsCount.toString(),
                                     color: AppColors.onSurface,
                                   ),
                                 ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _StatCard(
+                                    title: 'Cancel.',
+                                    value: data.cancelledCount.toString(),
+                                    color: AppColors.error,
+                                  ),
+                                ),
                               ],
                             ),
-                            const SizedBox(height: 32),
+                            const SizedBox(height: 16),
+                            _buildFiltersCompact(),
+                            const SizedBox(height: 16),
                             Text(
-                              'Reservas Recientes',
-                              style: Theme.of(context).textTheme.titleLarge,
+                              'Reservas',
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
@@ -135,113 +141,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         (context, index) {
                           final booking = data.recentBookings[index];
                           return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-                            child: TonalCard(
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceHigh,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
                                 children: [
-                                  Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        width: 48,
-                                        height: 48,
-                                        decoration: BoxDecoration(
-                                          color: AppColors.surfaceHighest,
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: const Icon(
-                                          Icons.person,
-                                          color: AppColors.primary,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              booking.customerName,
-                                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            GestureDetector(
-                                              onTap: () async {
-                                                final Uri launchUri = Uri(
-                                                  scheme: 'tel',
-                                                  path: booking.customerPhone,
-                                                );
-                                                if (await canLaunchUrl(launchUri)) {
-                                                  await launchUrl(launchUri);
-                                                }
-                                              },
-                                              child: Text(
-                                                booking.customerPhone,
-                                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                                      color: AppColors.primary,
-                                                      decoration: TextDecoration.underline,
-                                                    ),
-                                              ),
-                                            ),
-                                            if (booking.customerEmail.isNotEmpty)
-                                              Text(
-                                                booking.customerEmail,
-                                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                                      color: AppColors.onSurfaceVariant,
-                                                    ),
-                                              ),
-                                          ],
-                                        ),
-                                      ),
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.end,
-                                        children: [
-                                          Text(
-                                            currencyFormat.format(booking.price),
-                                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: AppColors.primary,
-                                                ),
-                                          ),
-                                          Text(
-                                            booking.bookingCode,
-                                            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                                  fontSize: 10,
-                                                ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+                                  Container(
+                                    width: 36,
+                                    height: 36,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.surfaceHighest,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(Icons.person, color: AppColors.primary, size: 20),
                                   ),
-                                  const SizedBox(height: 12),
-                                  const Divider(color: AppColors.surfaceHighest, height: 1),
-                                  const SizedBox(height: 12),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(booking.customerName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                        Text('${_formatDate(booking.date)} ${booking.hour}:00 • ${booking.courtName}', style: const TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant)),
+                                      ],
+                                    ),
+                                  ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
-                                      Row(
-                                        children: [
-                                          const Icon(Icons.calendar_today, size: 14, color: AppColors.onSurfaceVariant),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            '${booking.date} • ${booking.hour}:00',
-                                            style: Theme.of(context).textTheme.labelMedium,
-                                          ),
-                                        ],
-                                      ),
+                                      Text(formatCLP(booking.price), style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary, fontSize: 14)),
                                       _buildPaymentBadge(booking.paymentMethod),
                                     ],
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Cancha: ${booking.courtName}',
-                                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                          color: AppColors.onSurface,
-                                          fontWeight: FontWeight.w600,
-                                        ),
                                   ),
                                 ],
                               ),
@@ -251,7 +184,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         childCount: data.recentBookings.length,
                       ),
                     ),
-                    const SliverToBoxAdapter(child: SizedBox(height: 100)),
+                    SliverToBoxAdapter(
+                      child: _buildPagination(data.totalPages),
+                    ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 24)),
                   ],
                 ),
               );
@@ -264,6 +200,169 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       bottomNavigationBar: const AppNavigationBar(currentPath: '/dashboard'),
     );
+  }
+
+  Widget _buildFiltersCompact() {
+    return Column(
+      children: [
+        Container(
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppColors.surfaceHigh,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: TextField(
+            controller: _searchController,
+            style: const TextStyle(color: Colors.white, fontSize: 14),
+            decoration: const InputDecoration(
+              hintText: 'Buscar por nombre...',
+              hintStyle: TextStyle(color: AppColors.onSurfaceVariant, fontSize: 14),
+              prefixIcon: Icon(Icons.search, color: AppColors.primary),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(vertical: 10),
+            ),
+            onSubmitted: (_) {
+              setState(() => _currentPage = 1);
+              _loadData();
+            },
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: Material(
+                color: AppColors.surfaceHigh,
+                borderRadius: BorderRadius.circular(8),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: _selectedDate ?? DateTime.now(),
+                      firstDate: DateTime(2023),
+                      lastDate: DateTime(2030),
+                    );
+                    if (picked != null) {
+                      setState(() {
+                        _selectedDate = picked;
+                        _currentPage = 1;
+                      });
+                      _loadData();
+                    }
+                  },
+                  child: Container(
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceHigh,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.calendar_today, color: AppColors.primary, size: 18),
+                        const SizedBox(width: 8),
+                        Text(
+                          _selectedDate == null ? 'Seleccionar fecha' : DateFormat('dd/MM/yyyy', 'es_ES').format(_selectedDate!),
+                          style: const TextStyle(color: Colors.white, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  showModalBottomSheet(
+                    context: context,
+                    backgroundColor: AppColors.surfaceHigh,
+                    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+                    builder: (context) => Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Text('Filtrar por estado', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                        ),
+                        ListTile(title: const Text('Todos', style: TextStyle(color: Colors.white)), onTap: () { setState(() => _selectedStatus = null); _loadData(); Navigator.pop(context); }),
+                        ListTile(title: const Text('Pendiente', style: TextStyle(color: Colors.white)), onTap: () { setState(() => _selectedStatus = 'pending'); _loadData(); Navigator.pop(context); }),
+                        ListTile(title: const Text('Confirmado', style: TextStyle(color: Colors.white)), onTap: () { setState(() => _selectedStatus = 'confirmed'); _loadData(); Navigator.pop(context); }),
+                        ListTile(title: const Text('Cancelado', style: TextStyle(color: Colors.white)), onTap: () { setState(() => _selectedStatus = 'cancelled'); _loadData(); Navigator.pop(context); }),
+                        const SizedBox(height: 16),
+                      ],
+                    ),
+                  );
+                },
+                child: Container(
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceHigh,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.filter_list, color: AppColors.primary, size: 18),
+                      const SizedBox(width: 8),
+                      Text(
+                        _selectedStatus == null ? 'Todos los estados' : _getStatusLabel(_selectedStatus!),
+                        style: const TextStyle(color: Colors.white, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            if (_searchController.text.isNotEmpty || _selectedStatus != null || _selectedDate != null)
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _searchController.clear();
+                    _selectedStatus = null;
+                    _selectedDate = null;
+                    _currentPage = 1;
+                  });
+                  _loadData();
+                },
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.close, color: AppColors.error, size: 18),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _formatDate(String dateStr) {
+    try {
+      final date = DateFormat('yyyy-MM-dd').parse(dateStr);
+      return DateFormat('dd-MM-yyyy').format(date);
+    } catch (e) {
+      return dateStr;
+    }
+  }
+
+  String _getStatusLabel(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return 'Pendiente';
+      case 'confirmed':
+        return 'Confirmado';
+      case 'cancelled':
+        return 'Cancelado';
+      default:
+        return status;
+    }
   }
 
   Widget _buildPaymentBadge(String method) {
@@ -303,6 +402,120 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
+
+  Widget _buildFilters() {
+    return Column(
+      children: [
+        TextField(
+          controller: _searchController,
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            hintText: 'Buscar por nombre...',
+            hintStyle: const TextStyle(color: AppColors.onSurfaceVariant),
+            prefixIcon: const Icon(Icons.search, color: AppColors.primary),
+            filled: true,
+            fillColor: AppColors.surfaceHigh,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+          ),
+          onSubmitted: (_) {
+            setState(() => _currentPage = 1);
+            _loadData();
+          },
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.calendar_today, size: 16),
+                label: Text(_selectedDate == null ? 'Fecha' : DateFormat('dd/MM').format(_selectedDate!)),
+                onPressed: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: _selectedDate ?? DateTime.now(),
+                    firstDate: DateTime(2023),
+                    lastDate: DateTime(2030),
+                  );
+                  if (picked != null) {
+                    setState(() {
+                      _selectedDate = picked;
+                      _currentPage = 1;
+                    });
+                    _loadData();
+                  }
+                },
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: DropdownButtonFormField<String>(
+                value: _selectedStatus,
+                dropdownColor: AppColors.surfaceHigh,
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                  filled: true,
+                  fillColor: AppColors.surfaceHigh,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                ),
+                hint: const Text('Estado', style: TextStyle(color: Colors.white, fontSize: 13)),
+                items: ['pending', 'confirmed', 'cancelled'].map((s) => DropdownMenuItem(
+                  value: s,
+                  child: Text(s.toUpperCase(), style: const TextStyle(color: Colors.white, fontSize: 12)),
+                )).toList(),
+                onChanged: (val) {
+                  setState(() {
+                    _selectedStatus = val;
+                    _currentPage = 1;
+                  });
+                  _loadData();
+                },
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.close, color: AppColors.error),
+              onPressed: () {
+                setState(() {
+                  _searchController.clear();
+                  _selectedStatus = null;
+                  _selectedDate = null;
+                  _currentPage = 1;
+                });
+                _loadData();
+              },
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPagination(int totalPages) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back_ios, size: 16, color: Colors.white),
+            onPressed: _currentPage > 1 ? () {
+              setState(() => _currentPage--);
+              _loadData();
+            } : null,
+          ),
+          const SizedBox(width: 16),
+          Text('$_currentPage / $totalPages', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          const SizedBox(width: 16),
+          IconButton(
+            icon: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.white),
+            onPressed: _currentPage < totalPages ? () {
+              setState(() => _currentPage++);
+              _loadData();
+            } : null,
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _StatCard extends StatelessWidget {
@@ -315,14 +528,15 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TonalCard(
+      padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: Theme.of(context).textTheme.labelMedium),
-          const SizedBox(height: 8),
+          Text(title, style: Theme.of(context).textTheme.labelSmall),
+          const SizedBox(height: 4),
           Text(
             value,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: color,
                   fontWeight: FontWeight.bold,
                 ),

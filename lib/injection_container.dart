@@ -27,9 +27,23 @@ import 'features/dashboard/domain/usecases/create_internal_booking_usecase.dart'
 import 'features/dashboard/domain/usecases/cancel_booking_usecase.dart';
 import 'features/dashboard/domain/usecases/update_court_slot_usecase.dart';
 import 'features/dashboard/domain/usecases/update_court_schedule_usecase.dart';
+import 'features/dashboard/domain/usecases/get_sport_center_settings_usecase.dart';
+import 'features/dashboard/domain/usecases/update_sport_center_usecase.dart';
 import 'features/dashboard/presentation/bloc/dashboard_bloc.dart';
 import 'features/dashboard/presentation/bloc/agenda_bloc.dart';
 import 'features/dashboard/presentation/bloc/schedule_bloc.dart';
+import 'features/dashboard/presentation/bloc/settings_bloc.dart';
+
+// Recurring
+import 'features/recurring/presentation/bloc/recurring_bloc.dart';
+import 'features/recurring/data/datasources/recurring_remote_data_source.dart';
+import 'features/recurring/data/datasources/recurring_remote_data_source_impl.dart';
+import 'features/recurring/data/repositories/recurring_repository_impl.dart';
+import 'features/recurring/domain/repositories/recurring_repository.dart';
+import 'features/recurring/domain/usecases/get_recurring_series_usecase.dart';
+import 'features/recurring/domain/usecases/create_recurring_reservation_usecase.dart';
+import 'features/recurring/domain/usecases/cancel_recurring_reservation_usecase.dart';
+import 'features/recurring/domain/usecases/delete_series_usecase.dart';
 
 final sl = GetIt.instance;
 
@@ -40,7 +54,7 @@ Future<void> init() async {
 
   final dio = Dio(
     BaseOptions(
-      baseUrl: 'https://api.reservaloya.cl/api',
+      baseUrl: AppConfig.apiUrl,
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
     ),
@@ -77,11 +91,16 @@ Future<void> init() async {
         deleteCourtUseCase: sl(),
         createInternalBookingUseCase: sl(),
         cancelBookingUseCase: sl(),
+        createRecurringReservationUseCase: sl(),
       ));
   sl.registerFactory(() => ScheduleBloc(
         getAdminCourtsUseCase: sl(),
         updateCourtSlotUseCase: sl(),
         updateCourtScheduleUseCase: sl(),
+      ));
+  sl.registerFactory(() => SettingsBloc(
+        getSportCenterSettingsUseCase: sl(),
+        updateSportCenterUseCase: sl(),
       ));
   sl.registerLazySingleton(() => GetDashboardDataUseCase(sl()));
   sl.registerLazySingleton(() => GetAgendaUseCase(sl()));
@@ -93,10 +112,29 @@ Future<void> init() async {
   sl.registerLazySingleton(() => CancelBookingUseCase(sl()));
   sl.registerLazySingleton(() => UpdateCourtSlotUseCase(sl()));
   sl.registerLazySingleton(() => UpdateCourtScheduleUseCase(sl()));
+  sl.registerLazySingleton(() => GetSportCenterSettingsUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateSportCenterUseCase(sl()));
   sl.registerLazySingleton<DashboardRepository>(
     () => DashboardRepositoryImpl(remoteDataSource: sl()),
   );
   sl.registerLazySingleton<DashboardRemoteDataSource>(
     () => DashboardRemoteDataSourceImpl(dio: sl()),
+  );
+
+  // Recurring
+  sl.registerFactory(() => RecurringBloc(
+        getRecurringSeriesUseCase: sl(),
+        cancelRecurringReservationUseCase: sl(),
+        deleteSeriesUseCase: sl(),
+      ));
+  sl.registerLazySingleton(() => GetRecurringSeriesUseCase(sl()));
+  sl.registerLazySingleton(() => CreateRecurringReservationUseCase(sl()));
+  sl.registerLazySingleton(() => CancelRecurringReservationUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteSeriesUseCase(sl()));
+  sl.registerLazySingleton<RecurringRepository>(
+    () => RecurringRepositoryImpl(remoteDataSource: sl()),
+  );
+  sl.registerLazySingleton<RecurringRemoteDataSource>(
+    () => RecurringRemoteDataSourceImpl(dio: sl()),
   );
 }

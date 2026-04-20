@@ -12,8 +12,15 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   }
 
   Future<void> _onLoadDashboardData(LoadDashboardData event, Emitter<DashboardState> emit) async {
+    print('📊 Dashboard - date: ${event.date}, customerName: ${event.customerName}, status: ${event.status}');
     emit(DashboardLoading());
-    final result = await getDashboardDataUseCase(NoParams());
+    final result = await getDashboardDataUseCase(DashboardParams(
+      date: event.date,
+      customerName: event.customerName,
+      bookingCode: event.bookingCode,
+      status: event.status,
+      page: event.page,
+    ));
     result.fold(
       (failure) => emit(DashboardError(message: failure.message)),
       (data) => emit(DashboardLoaded(data: data)),

@@ -18,7 +18,9 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, User>> login(String email, String password) async {
     try {
       final user = await remoteDataSource.login(email, password);
+      print('🔐 SAVING TOKEN: ${user.token}');
       await sharedPreferences.setString('jwt_token', user.token);
+      print('🔐 TOKEN SAVED: ${user.token}');
       return Right(user);
     } catch (e) {
       return const Left(ServerFailure('Credenciales inválidas o error de conexión.'));
