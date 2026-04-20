@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:reservaloya_admin/core/theme/app_colors.dart';
 import 'package:reservaloya_admin/core/widgets/app_navigation_bar.dart';
+import 'package:reservaloya_admin/core/widgets/app_drawer.dart';
 import '../bloc/agenda_bloc.dart';
 import '../bloc/agenda_event.dart';
 import '../bloc/agenda_state.dart';
@@ -408,6 +409,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
       },
       child: Scaffold(
         backgroundColor: AppColors.background,
+        drawer: const AppDrawer(),
         body: SafeArea(
           child: BlocListener<AgendaBloc, AgendaState>(
             listener: (context, state) {
@@ -478,16 +480,23 @@ class _AgendaScreenState extends State<AgendaScreen> {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+      padding: const EdgeInsets.fromLTRB(16, 16, 24, 8),
       child: Row(
         children: [
+          Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.menu, color: Colors.white),
+              onPressed: () => Scaffold.of(context).openDrawer(),
+            ),
+          ),
+          const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'HORARIO SELECCIONADO',
                 style: GoogleFonts.inter(
-                  fontSize: 12,
+                  fontSize: 10,
                   fontWeight: FontWeight.w600,
                   color: AppColors.onSurfaceVariant,
                   letterSpacing: 1.2,
@@ -499,13 +508,14 @@ class _AgendaScreenState extends State<AgendaScreen> {
                   'es',
                 ).format(_selectedDate).toUpperCase(),
                 style: GoogleFonts.manrope(
-                  fontSize: 24,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
             ],
           ),
+          const Spacer(),
           Container(
             decoration: BoxDecoration(
               color: AppColors.surfaceHigh,

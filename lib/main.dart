@@ -13,9 +13,12 @@ import 'features/dashboard/presentation/screens/agenda_screen.dart';
 import 'features/dashboard/presentation/screens/courts_screen.dart';
 import 'features/dashboard/presentation/screens/schedule_config_screen.dart';
 import 'features/dashboard/presentation/screens/settings_screen.dart';
-import 'features/qr/presentation/screens/qr_screen.dart';
+import 'features/dashboard/presentation/screens/qr_screen.dart';
 import 'features/recurring/presentation/bloc/recurring_bloc.dart';
 import 'features/recurring/presentation/screens/recurring_screen.dart';
+import 'features/dashboard/presentation/bloc/schedule_bloc.dart';
+import 'features/dashboard/presentation/bloc/settings_bloc.dart';
+import 'features/users/presentation/screens/users_screen.dart';
 import 'injection_container.dart' as di;
 
 void main() async {
@@ -53,6 +56,10 @@ final _router = GoRouter(
       builder: (context, state) => const RecurringScreen(),
     ),
     GoRoute(
+      path: '/qr',
+      builder: (context, state) => const QRScreen(),
+    ),
+    GoRoute(
       path: '/settings',
       builder: (context, state) {
         final id = state.extra as String? ?? '';
@@ -60,11 +67,8 @@ final _router = GoRouter(
       },
     ),
     GoRoute(
-      path: '/qr',
-      builder: (context, state) {
-        final slug = state.extra as String? ?? '';
-        return QRScreen(slug: slug);
-      },
+      path: '/users',
+      builder: (context, state) => const UsersScreen(),
     ),
   ],
 );
@@ -79,7 +83,9 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => di.sl<AuthBloc>()),
         BlocProvider(create: (_) => di.sl<DashboardBloc>()),
         BlocProvider(create: (_) => di.sl<AgendaBloc>()),
-        BlocProvider(create: (_) => di.sl<RecurringBloc>()..add(LoadRecurringSeries())),
+        BlocProvider(create: (_) => di.sl<ScheduleBloc>()),
+        BlocProvider(create: (_) => di.sl<SettingsBloc>()),
+        BlocProvider(create: (_) => di.sl<RecurringBloc>()..add(const LoadRecurringSeries())),
       ],
       child: MaterialApp.router(
         title: 'ReservaloYA Admin',

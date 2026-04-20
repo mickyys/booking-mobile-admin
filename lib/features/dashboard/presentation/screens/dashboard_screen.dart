@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_navigation_bar.dart';
 import '../../../../core/widgets/app_drawer.dart';
 import '../../../../core/widgets/tonal_card.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
-import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 import '../bloc/dashboard_bloc.dart';
 import '../bloc/dashboard_event.dart';
 import '../bloc/dashboard_state.dart';
+import '../../domain/entities/booking.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -22,7 +22,8 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _codeController = TextEditingController();
   String? _selectedStatus;
   DateTime? _selectedDate;
   int _currentPage = 1;
@@ -33,23 +34,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _loadData();
   }
 
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _codeController.dispose();
+    super.dispose();
+  }
+
   void _loadData() {
     context.read<DashboardBloc>().add(LoadDashboardData(
-      customerName: _searchController.text.isNotEmpty ? _searchController.text : null,
+      customerName: _nameController.text.isNotEmpty ? _nameController.text : null,
+      bookingCode: _codeController.text.isNotEmpty ? _codeController.text : null,
       status: _selectedStatus,
       date: _selectedDate != null ? DateFormat('yyyy-MM-dd').format(_selectedDate!) : null,
       page: _currentPage,
     ));
   }
 
+  String formatCLP(num value) => '\$ ${NumberFormat('#,###', 'es_CL').format(value)}';
+
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(locale: 'es_AR', symbol: '', decimalDigits: 0);
-    String formatCLP(num value) => '\$ ${NumberFormat('#,###', 'es_CL').format(value)}';
-
     return Scaffold(
       backgroundColor: AppColors.background,
       drawer: const AppDrawer(),
+      appBar: AppBar(
+        title: Text('Dashboard', style: GoogleFonts.manrope(fontWeight: FontWeight.bold)),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+      ),
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthUnauthenticated) {
@@ -59,140 +78,83 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: BlocBuilder<DashboardBloc, DashboardState>(
           builder: (context, state) {
             if (state is DashboardLoading) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(child: CircularProgressIndicator(color: AppColors.primary));
             } else if (state is DashboardLoaded) {
               final data = state.data;
               return RefreshIndicator(
                 onRefresh: () async {
                   _loadData();
                 },
-                child: CustomScrollView(
-                  slivers: [
-                    SliverAppBar(
-                      expandedHeight: 120.0,
-                      floating: false,
-                      pinned: true,
-                      backgroundColor: AppColors.background,
-                      elevation: 0,
-                      leading: Builder(
-                        builder: (context) => IconButton(
-                          icon: const Icon(Icons.menu),
-                          onPressed: () => Scaffold.of(context).openDrawer(),
-                        ),
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildStatsRow(data),
+                      const SizedBox(height: 24),
+                      _buildFilters(),
+                      const SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Reservas Recientes',
+                            style: GoogleFonts.manrope(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          Text(
+                            'Total: ${data.recentBookings.length}',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
                       ),
-                      flexibleSpace: FlexibleSpaceBar(
-                        centerTitle: false,
-                        titlePadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                        title: Text(
-                          'Dashboard',
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                color: AppColors.onSurface,
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
-                      ),
-                    ),
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
+                      const SizedBox(height: 12),
+                      if (data.recentBookings.isEmpty)
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(40.0),
+                            child: Column(
                               children: [
-                                Expanded(
-                                  child: _StatCard(
-                                    title: 'Ingresos',
-                                    value: formatCLP(data.totalRevenue),
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: _StatCard(
-                                    title: 'Hoy',
-                                    value: data.todayBookingsCount.toString(),
-                                    color: AppColors.onSurface,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: _StatCard(
-                                    title: 'Cancel.',
-                                    value: data.cancelledCount.toString(),
-                                    color: AppColors.error,
-                                  ),
-                                ),
+                                Icon(Icons.search_off, size: 48, color: AppColors.onSurfaceVariant.withOpacity(0.5)),
+                                const SizedBox(height: 16),
+                                Text('No se encontraron reservas', style: GoogleFonts.inter(color: AppColors.onSurfaceVariant)),
                               ],
                             ),
-                            const SizedBox(height: 16),
-                            _buildFiltersCompact(),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Reservas',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                          ],
+                          ),
+                        )
+                      else
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: data.recentBookings.length,
+                          itemBuilder: (context, index) {
+                            return _buildBookingCard(data.recentBookings[index]);
+                          },
                         ),
-                      ),
-                    ),
-                    SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final booking = data.recentBookings[index];
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: AppColors.surfaceHigh,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 36,
-                                    height: 36,
-                                    decoration: BoxDecoration(
-                                      color: AppColors.surfaceHighest,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const Icon(Icons.person, color: AppColors.primary, size: 20),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(booking.customerName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
-                                        Text('${_formatDate(booking.date)} ${booking.hour}:00 • ${booking.courtName}', style: const TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant)),
-                                      ],
-                                    ),
-                                  ),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      Text(formatCLP(booking.price), style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary, fontSize: 14)),
-                                      _buildPaymentBadge(booking.paymentMethod),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                        childCount: data.recentBookings.length,
-                      ),
-                    ),
-                    SliverToBoxAdapter(
-                      child: _buildPagination(data.totalPages),
-                    ),
-                    const SliverToBoxAdapter(child: SizedBox(height: 24)),
-                  ],
+                      _buildPagination(data.totalPages),
+                      const SizedBox(height: 40),
+                    ],
+                  ),
                 ),
               );
             } else if (state is DashboardError) {
-              return Center(child: Text(state.message));
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(state.message, style: const TextStyle(color: AppColors.error)),
+                    const SizedBox(height: 16),
+                    ElevatedButton(onPressed: _loadData, child: const Text('Reintentar')),
+                  ],
+                ),
+              );
             }
             return const SizedBox.shrink();
           },
@@ -202,144 +164,400 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildFiltersCompact() {
+  Widget _buildStatsRow(dynamic data) {
+    return Row(
+      children: [
+        Expanded(
+          child: _StatCard(
+            title: 'INGRESOS',
+            value: formatCLP(data.totalRevenue),
+            color: AppColors.primary,
+            icon: Icons.attach_money,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _StatCard(
+            title: 'HOY',
+            value: data.todayBookingsCount.toString(),
+            color: Colors.white,
+            icon: Icons.today,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _StatCard(
+            title: 'CANCEL.',
+            value: data.cancelledCount.toString(),
+            color: AppColors.error,
+            icon: Icons.cancel_outlined,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFilters() {
     return Column(
       children: [
-        Container(
-          height: 40,
-          decoration: BoxDecoration(
-            color: AppColors.surfaceHigh,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: TextField(
-            controller: _searchController,
-            style: const TextStyle(color: Colors.white, fontSize: 14),
-            decoration: const InputDecoration(
-              hintText: 'Buscar por nombre...',
-              hintStyle: TextStyle(color: AppColors.onSurfaceVariant, fontSize: 14),
-              prefixIcon: Icon(Icons.search, color: AppColors.primary),
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(vertical: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _buildTextField(_nameController, 'Nombre cliente...', Icons.person_outline),
             ),
-            onSubmitted: (_) {
-              setState(() => _currentPage = 1);
-              _loadData();
-            },
-          ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildTextField(_codeController, 'Código...', Icons.qr_code_scanner),
+            ),
+          ],
         ),
         const SizedBox(height: 8),
         Row(
           children: [
             Expanded(
-              child: Material(
-                color: AppColors.surfaceHigh,
-                borderRadius: BorderRadius.circular(8),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(8),
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: _selectedDate ?? DateTime.now(),
-                      firstDate: DateTime(2023),
-                      lastDate: DateTime(2030),
-                    );
-                    if (picked != null) {
-                      setState(() {
-                        _selectedDate = picked;
-                        _currentPage = 1;
-                      });
-                      _loadData();
-                    }
-                  },
-                  child: Container(
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceHigh,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.calendar_today, color: AppColors.primary, size: 18),
-                        const SizedBox(width: 8),
-                        Text(
-                          _selectedDate == null ? 'Seleccionar fecha' : DateFormat('dd/MM/yyyy', 'es_ES').format(_selectedDate!),
-                          style: const TextStyle(color: Colors.white, fontSize: 13),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+              child: _buildDropdownFilter(),
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: GestureDetector(
-                onTap: () {
-                  showModalBottomSheet(
-                    context: context,
-                    backgroundColor: AppColors.surfaceHigh,
-                    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
-                    builder: (context) => Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Text('Filtrar por estado', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                        ),
-                        ListTile(title: const Text('Todos', style: TextStyle(color: Colors.white)), onTap: () { setState(() => _selectedStatus = null); _loadData(); Navigator.pop(context); }),
-                        ListTile(title: const Text('Pendiente', style: TextStyle(color: Colors.white)), onTap: () { setState(() => _selectedStatus = 'pending'); _loadData(); Navigator.pop(context); }),
-                        ListTile(title: const Text('Confirmado', style: TextStyle(color: Colors.white)), onTap: () { setState(() => _selectedStatus = 'confirmed'); _loadData(); Navigator.pop(context); }),
-                        ListTile(title: const Text('Cancelado', style: TextStyle(color: Colors.white)), onTap: () { setState(() => _selectedStatus = 'cancelled'); _loadData(); Navigator.pop(context); }),
-                        const SizedBox(height: 16),
-                      ],
-                    ),
-                  );
-                },
-                child: Container(
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceHigh,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.filter_list, color: AppColors.primary, size: 18),
-                      const SizedBox(width: 8),
-                      Text(
-                        _selectedStatus == null ? 'Todos los estados' : _getStatusLabel(_selectedStatus!),
-                        style: const TextStyle(color: Colors.white, fontSize: 13),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              child: _buildDateFilter(),
             ),
-            if (_searchController.text.isNotEmpty || _selectedStatus != null || _selectedDate != null)
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _searchController.clear();
-                    _selectedStatus = null;
-                    _selectedDate = null;
-                    _currentPage = 1;
-                  });
-                  _loadData();
-                },
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.error.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.close, color: AppColors.error, size: 18),
+            if (_nameController.text.isNotEmpty || _codeController.text.isNotEmpty || _selectedStatus != null || _selectedDate != null)
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _nameController.clear();
+                      _codeController.clear();
+                      _selectedStatus = null;
+                      _selectedDate = null;
+                      _currentPage = 1;
+                    });
+                    _loadData();
+                  },
+                  icon: const Icon(Icons.refresh, color: AppColors.error),
+                  style: IconButton.styleFrom(backgroundColor: AppColors.error.withOpacity(0.1)),
                 ),
               ),
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String hint, IconData icon) {
+    return Container(
+      height: 44,
+      decoration: BoxDecoration(
+        color: AppColors.surfaceHigh,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: TextField(
+        controller: controller,
+        style: const TextStyle(color: Colors.white, fontSize: 13),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: const TextStyle(color: AppColors.onSurfaceVariant, fontSize: 13),
+          prefixIcon: Icon(icon, color: AppColors.primary, size: 18),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+        ),
+        onSubmitted: (_) {
+          setState(() => _currentPage = 1);
+          _loadData();
+        },
+      ),
+    );
+  }
+
+  Widget _buildDropdownFilter() {
+    return GestureDetector(
+      onTap: () {
+        showModalBottomSheet(
+          context: context,
+          backgroundColor: AppColors.surfaceHigh,
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+          builder: (context) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text('Filtrar por estado', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
+              _statusTile('Todos', null),
+              _statusTile('Pendiente', 'pending'),
+              _statusTile('Confirmado', 'confirmed'),
+              _statusTile('Cancelado', 'cancelled'),
+              const SizedBox(height: 24),
+            ],
+          ),
+        );
+      },
+      child: Container(
+        height: 44,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceHigh,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.filter_list, color: AppColors.primary, size: 18),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                _selectedStatus == null ? 'Estado' : _getStatusLabel(_selectedStatus!),
+                style: const TextStyle(color: Colors.white, fontSize: 13),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const Icon(Icons.arrow_drop_down, color: AppColors.onSurfaceVariant),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _statusTile(String label, String? status) {
+    return ListTile(
+      title: Text(label, style: const TextStyle(color: Colors.white)),
+      trailing: _selectedStatus == status ? const Icon(Icons.check, color: AppColors.primary) : null,
+      onTap: () {
+        setState(() {
+          _selectedStatus = status;
+          _currentPage = 1;
+        });
+        _loadData();
+        Navigator.pop(context);
+      },
+    );
+  }
+
+  Widget _buildDateFilter() {
+    return GestureDetector(
+      onTap: () async {
+        final picked = await showDatePicker(
+          context: context,
+          initialDate: _selectedDate ?? DateTime.now(),
+          firstDate: DateTime(2023),
+          lastDate: DateTime(2030),
+        );
+        if (picked != null) {
+          setState(() {
+            _selectedDate = picked;
+            _currentPage = 1;
+          });
+          _loadData();
+        }
+      },
+      child: Container(
+        height: 44,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceHigh,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.calendar_today, color: AppColors.primary, size: 16),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                _selectedDate == null ? 'Fecha' : DateFormat('dd/MM/yy').format(_selectedDate!),
+                style: const TextStyle(color: Colors.white, fontSize: 13),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBookingCard(Booking booking) {
+    final isCancelled = booking.status.toLowerCase() == 'cancelled';
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceHigh,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          booking.customerName.toUpperCase(),
+                          style: GoogleFonts.manrope(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                            color: Colors.white,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      _buildStatusBadge(booking.status),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      _buildInfoIcon(Icons.qr_code, booking.bookingCode),
+                      const SizedBox(width: 16),
+                      _buildInfoIcon(Icons.stadium_outlined, booking.courtName),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      _buildInfoIcon(Icons.calendar_today, _formatDate(booking.date)),
+                      const SizedBox(width: 16),
+                      _buildInfoIcon(Icons.access_time, '${booking.hour}:00 hrs'),
+                    ],
+                  ),
+                  const Divider(color: Colors.white10, height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('MÉTODO DE PAGO', style: GoogleFonts.inter(fontSize: 10, color: AppColors.onSurfaceVariant, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 4),
+                          _buildPaymentBadge(booking.paymentMethod),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text('TOTAL', style: GoogleFonts.inter(fontSize: 10, color: AppColors.onSurfaceVariant, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 4),
+                          Text(formatCLP(booking.price), style: GoogleFonts.manrope(fontWeight: FontWeight.bold, color: AppColors.primary, fontSize: 18)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            if (!isCancelled)
+              Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Colors.black12,
+                  border: Border(top: BorderSide(color: Colors.white10)),
+                ),
+                child: TextButton.icon(
+                  onPressed: () => _confirmCancellation(booking),
+                  icon: const Icon(Icons.cancel_outlined, size: 18, color: AppColors.error),
+                  label: Text('CANCELAR RESERVA', style: GoogleFonts.inter(color: AppColors.error, fontWeight: FontWeight.bold, fontSize: 12)),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoIcon(IconData icon, String label) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: AppColors.primary),
+        const SizedBox(width: 6),
+        Text(label, style: GoogleFonts.inter(color: Colors.white70, fontSize: 12)),
+      ],
+    );
+  }
+
+  Widget _buildStatusBadge(String status) {
+    Color color;
+    String text;
+
+    switch (status.toLowerCase()) {
+      case 'confirmed':
+        color = AppColors.primary;
+        text = 'CONFIRMADO';
+        break;
+      case 'cancelled':
+        color = AppColors.error;
+        text = 'CANCELADO';
+        break;
+      case 'pending':
+        color = Colors.orange;
+        text = 'PENDIENTE';
+        break;
+      default:
+        color = AppColors.onSurfaceVariant;
+        text = status.toUpperCase();
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.5)),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+      ),
+    );
+  }
+
+  void _confirmCancellation(Booking booking) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surfaceHigh,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('¿Cancelar Reserva?', style: GoogleFonts.manrope(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: Text(
+          '¿Estás seguro que deseas cancelar la reserva de ${booking.customerName} para el ${_formatDate(booking.date)} a las ${booking.hour}:00 hrs?',
+          style: GoogleFonts.inter(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('NO, VOLVER', style: GoogleFonts.inter(color: Colors.white70)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              context.read<DashboardBloc>().add(CancelDashboardBooking(
+                bookingId: booking.id,
+                customerName: _nameController.text.isNotEmpty ? _nameController.text : null,
+                bookingCode: _codeController.text.isNotEmpty ? _codeController.text : null,
+                status: _selectedStatus,
+                date: _selectedDate != null ? DateFormat('yyyy-MM-dd').format(_selectedDate!) : null,
+                page: _currentPage,
+              ));
+            },
+            child: const Text('SÍ, CANCELAR'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -372,29 +590,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
     switch (method.toLowerCase()) {
       case 'mercadopago':
         color = Colors.blue;
-        text = 'Mercado Pago';
+        text = 'MERCADO PAGO';
         break;
       case 'presential':
       case 'presencial':
         color = Colors.orange;
-        text = 'Presencial';
+        text = 'PRESENCIAL';
         break;
       case 'internal':
       case 'interno':
         color = AppColors.primary;
-        text = 'Interno';
+        text = 'INTERNO';
         break;
       default:
         color = AppColors.onSurfaceVariant;
-        text = method;
+        text = method.toUpperCase();
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: color.withOpacity(0.5)),
       ),
       child: Text(
         text,
@@ -403,93 +620,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildFilters() {
-    return Column(
-      children: [
-        TextField(
-          controller: _searchController,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            hintText: 'Buscar por nombre...',
-            hintStyle: const TextStyle(color: AppColors.onSurfaceVariant),
-            prefixIcon: const Icon(Icons.search, color: AppColors.primary),
-            filled: true,
-            fillColor: AppColors.surfaceHigh,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-          ),
-          onSubmitted: (_) {
-            setState(() => _currentPage = 1);
-            _loadData();
-          },
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.calendar_today, size: 16),
-                label: Text(_selectedDate == null ? 'Fecha' : DateFormat('dd/MM').format(_selectedDate!)),
-                onPressed: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: _selectedDate ?? DateTime.now(),
-                    firstDate: DateTime(2023),
-                    lastDate: DateTime(2030),
-                  );
-                  if (picked != null) {
-                    setState(() {
-                      _selectedDate = picked;
-                      _currentPage = 1;
-                    });
-                    _loadData();
-                  }
-                },
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: DropdownButtonFormField<String>(
-                value: _selectedStatus,
-                dropdownColor: AppColors.surfaceHigh,
-                decoration: InputDecoration(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                  filled: true,
-                  fillColor: AppColors.surfaceHigh,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                ),
-                hint: const Text('Estado', style: TextStyle(color: Colors.white, fontSize: 13)),
-                items: ['pending', 'confirmed', 'cancelled'].map((s) => DropdownMenuItem(
-                  value: s,
-                  child: Text(s.toUpperCase(), style: const TextStyle(color: Colors.white, fontSize: 12)),
-                )).toList(),
-                onChanged: (val) {
-                  setState(() {
-                    _selectedStatus = val;
-                    _currentPage = 1;
-                  });
-                  _loadData();
-                },
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.close, color: AppColors.error),
-              onPressed: () {
-                setState(() {
-                  _searchController.clear();
-                  _selectedStatus = null;
-                  _selectedDate = null;
-                  _currentPage = 1;
-                });
-                _loadData();
-              },
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
   Widget _buildPagination(int totalPages) {
+    if (totalPages <= 1) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
@@ -522,8 +654,9 @@ class _StatCard extends StatelessWidget {
   final String title;
   final String value;
   final Color color;
+  final IconData icon;
 
-  const _StatCard({required this.title, required this.value, required this.color});
+  const _StatCard({required this.title, required this.value, required this.color, required this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -532,14 +665,21 @@ class _StatCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: Theme.of(context).textTheme.labelSmall),
-          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(title, style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.onSurfaceVariant)),
+              Icon(icon, size: 14, color: color.withOpacity(0.5)),
+            ],
+          ),
+          const SizedBox(height: 8),
           Text(
             value,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
+            style: GoogleFonts.manrope(
+              fontSize: 16,
+              color: color,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),

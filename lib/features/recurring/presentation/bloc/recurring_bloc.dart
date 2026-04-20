@@ -5,10 +5,23 @@ import '../../domain/usecases/cancel_recurring_reservation_usecase.dart';
 import '../../domain/usecases/delete_series_usecase.dart';
 
 // Events
-abstract class RecurringEvent {}
-class LoadRecurringSeries extends RecurringEvent {}
-class CancelReservation extends RecurringEvent { final String id; CancelReservation(this.id); }
-class DeleteSeries extends RecurringEvent { final String id; DeleteSeries(this.id); }
+abstract class RecurringEvent {
+  const RecurringEvent();
+}
+
+class LoadRecurringSeries extends RecurringEvent {
+  const LoadRecurringSeries();
+}
+
+class CancelReservation extends RecurringEvent {
+  final String id;
+  const CancelReservation(this.id);
+}
+
+class DeleteSeries extends RecurringEvent {
+  final String id;
+  const DeleteSeries(this.id);
+}
 
 // States
 abstract class RecurringState {}

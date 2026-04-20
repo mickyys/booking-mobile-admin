@@ -24,23 +24,23 @@ class SportCenter extends Equatable {
 
 class SportCenterSettings extends Equatable {
   final int cancellationHours;
-  final double cancellationRetention;
+  final int retentionPercent;
   final bool partialPaymentEnabled;
-  final double partialPaymentPercentage;
+  final int partialPaymentPercent;
 
   const SportCenterSettings({
     required this.cancellationHours,
-    required this.cancellationRetention,
+    required this.retentionPercent,
     required this.partialPaymentEnabled,
-    required this.partialPaymentPercentage,
+    required this.partialPaymentPercent,
   });
 
   @override
   List<Object?> get props => [
         cancellationHours,
-        cancellationRetention,
+        retentionPercent,
         partialPaymentEnabled,
-        partialPaymentPercentage,
+        partialPaymentPercent,
       ];
 }
 

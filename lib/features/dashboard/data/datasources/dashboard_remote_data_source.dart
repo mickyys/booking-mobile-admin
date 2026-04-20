@@ -216,13 +216,20 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
   @override
   Future<AdminSportCenterModel> getSportCenterSettings(String id) async {
     try {
-      final response = await dio.get('/admin/sport-centers/$id');
+      print('📡 DIO REQUEST: GET /admin/my-sport-center');
+      final response = await dio.get('/admin/my-sport-center');
+      print('📬 Response status: ${response.statusCode}');
+      print('📬 Response data: ${response.data}');
       if (response.statusCode == 200) {
         return AdminSportCenterModel.fromJson(response.data);
       } else {
         throw Exception('Failed to load sport center settings: ${response.statusCode}');
       }
     } catch (e) {
+      print('❌ Error in getSportCenterSettings: $e');
+      if (e is DioException) {
+        print('❌ Dio error detail: ${e.response?.data}');
+      }
       rethrow;
     }
   }

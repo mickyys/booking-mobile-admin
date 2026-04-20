@@ -13,7 +13,7 @@ class SportCenterModel extends SportCenter {
 
   factory SportCenterModel.fromJson(Map<String, dynamic> json) {
     return SportCenterModel(
-      id: json['id'] ?? '',
+      id: json['id'] ?? json['_id'] ?? '',
       name: json['name'] ?? '',
       slug: json['slug'] ?? '',
       city: json['city'] ?? '',
@@ -26,17 +26,17 @@ class SportCenterModel extends SportCenter {
 class SportCenterSettingsModel extends SportCenterSettings {
   const SportCenterSettingsModel({
     required super.cancellationHours,
-    required super.cancellationRetention,
+    required super.retentionPercent,
     required super.partialPaymentEnabled,
-    required super.partialPaymentPercentage,
+    required super.partialPaymentPercent,
   });
 
   factory SportCenterSettingsModel.fromJson(Map<String, dynamic> json) {
     return SportCenterSettingsModel(
       cancellationHours: json['cancellation_hours'] ?? 0,
-      cancellationRetention: (json['cancellation_retention'] as num?)?.toDouble() ?? 0.0,
+      retentionPercent: json['retention_percent'] ?? 0,
       partialPaymentEnabled: json['partial_payment_enabled'] ?? false,
-      partialPaymentPercentage: (json['partial_payment_percentage'] as num?)?.toDouble() ?? 0.0,
+      partialPaymentPercent: json['partial_payment_percent'] ?? 0,
     );
   }
 }
@@ -48,9 +48,12 @@ class AdminSportCenterModel extends AdminSportCenter {
   });
 
   factory AdminSportCenterModel.fromJson(Map<String, dynamic> json) {
+    // La API devuelve {"center": {...}}
+    final centerData = json['center'] ?? json;
     return AdminSportCenterModel(
-      sportCenter: SportCenterModel.fromJson(json['sport_center'] ?? json),
-      settings: SportCenterSettingsModel.fromJson(json['settings'] ?? {}),
+      sportCenter: SportCenterModel.fromJson(centerData),
+      // Los settings están dentro del mismo objeto center en esta API
+      settings: SportCenterSettingsModel.fromJson(centerData),
     );
   }
 }
@@ -82,7 +85,7 @@ class AdminCourtModel extends AdminCourt {
 
   factory AdminCourtModel.fromJson(Map<String, dynamic> json) {
     return AdminCourtModel(
-      id: json['id'] ?? '',
+      id: json['id'] ?? json['_id'] ?? '',
       name: json['name'] ?? '',
       description: json['description'] ?? '',
       slots: (json['schedule'] as List?)

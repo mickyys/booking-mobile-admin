@@ -29,8 +29,8 @@ class AppNavigationBar extends StatelessWidget {
           label: 'Agenda',
         ),
         NavigationDestination(
-          icon: Icon(Icons.stadium_outlined),
-          selectedIcon: Icon(Icons.stadium, color: AppColors.primary),
+          icon: Icon(Icons.emoji_events_outlined),
+          selectedIcon: Icon(Icons.emoji_events, color: AppColors.primary),
           label: 'Canchas',
         ),
         NavigationDestination(
