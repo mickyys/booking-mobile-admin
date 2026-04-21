@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/social_login_usecase.dart';
@@ -18,24 +19,41 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   Future<void> _onLoginRequested(LoginRequested event, Emitter<AuthState> emit) async {
+    debugPrint('AUTH BLOC: Login requested for ${event.email}');
     emit(AuthLoading());
+    
     final result = await loginUseCase(LoginParams(email: event.email, password: event.password));
     result.fold(
-      (failure) => emit(AuthFailure(message: failure.message)),
-      (user) => emit(AuthAuthenticated(user: user)),
+      (failure) {
+        debugPrint('AUTH BLOC: Login failed - ${failure.message}');
+        emit(AuthFailure(message: failure.message));
+      },
+      (user) {
+        debugPrint('AUTH BLOC: Login success - User: ${user.id}');
+        emit(AuthAuthenticated(user: user));
+      },
     );
   }
 
   Future<void> _onSocialLoginRequested(SocialLoginRequested event, Emitter<AuthState> emit) async {
+    debugPrint('AUTH BLOC: Social login requested - ${event.connection}');
     emit(AuthLoading());
+    
     final result = await socialLoginUseCase(SocialLoginParams(connection: event.connection));
     result.fold(
-      (failure) => emit(AuthFailure(message: failure.message)),
-      (user) => emit(AuthAuthenticated(user: user)),
+      (failure) {
+        debugPrint('AUTH BLOC: Social login failed - ${failure.message}');
+        emit(AuthFailure(message: failure.message));
+      },
+      (user) {
+        debugPrint('AUTH BLOC: Social login success - User: ${user.id}');
+        emit(AuthAuthenticated(user: user));
+      },
     );
   }
 
   void _onLogoutRequested(LogoutRequested event, Emitter<AuthState> emit) {
+    debugPrint('AUTH BLOC: Logout requested');
     emit(AuthUnauthenticated());
   }
 }

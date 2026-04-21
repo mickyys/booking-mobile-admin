@@ -46,6 +46,9 @@ android {
     }
 }
 
+val newVersionName = flutter.versionName
+project.extensions.extraProperties.set("archivesBaseName", "reservaloYA-$newVersionName")
+
 flutter {
     source = "../.."
 }

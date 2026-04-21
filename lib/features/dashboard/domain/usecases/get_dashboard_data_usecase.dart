@@ -22,6 +22,8 @@ class DashboardParams extends Equatable {
   final String? bookingCode;
   final String? status;
   final int page;
+  final String? startDate;
+  final String? endDate;
 
   const DashboardParams({
     this.date,
@@ -29,8 +31,10 @@ class DashboardParams extends Equatable {
     this.bookingCode,
     this.status,
     this.page = 1,
+    this.startDate,
+    this.endDate,
   });
 
   @override
-  List<Object?> get props => [date, customerName, bookingCode, status, page];
+  List<Object?> get props => [date, customerName, bookingCode, status, page, startDate, endDate];
 }

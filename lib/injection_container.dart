@@ -36,6 +36,7 @@ import 'package:reservaloya_admin/features/recurring/domain/usecases/delete_seri
 import 'package:reservaloya_admin/features/recurring/domain/usecases/create_recurring_reservation_usecase.dart';
 import 'package:reservaloya_admin/features/recurring/presentation/bloc/recurring_bloc.dart';
 import 'package:dio/dio.dart';
+import 'package:reservaloya_admin/core/utils/auth_interceptor.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:reservaloya_admin/core/usecases/usecase.dart';
@@ -55,7 +56,20 @@ Future<void> init() async {
   sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(connectivity: sl()));
   sl.registerLazySingleton(() => Connectivity());
 
-  sl.registerLazySingleton(() => Dio());
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: AppConfig.apiUrl,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+    ),
+  );
+  dio.interceptors.add(AuthInterceptor(sharedPreferences: sl()));
+  dio.interceptors.add(LogInterceptor(
+    requestBody: true,
+    responseBody: true,
+    logPrint: (obj) => print('🌐 DIO: $obj'),
+  ));
+  sl.registerLazySingleton(() => dio);
 
   sl.registerLazySingleton<Auth0>(() => Auth0(
     AppConfig.auth0Domain,

@@ -28,8 +28,13 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
   @override
   Future<DashboardDataModel> getDashboardData({DashboardParams? params}) async {
     try {
+      String? dateRange;
+      if (params?.startDate != null && params?.endDate != null) {
+        dateRange = '${params?.startDate}|${params?.endDate}';
+      }
+
       final queryParams = {
-        'date': params?.date,
+        'date': dateRange ?? params?.date,
         'customer_name': params?.customerName,
         'booking_code': params?.bookingCode,
         'status': params?.status,
@@ -37,7 +42,8 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
       };
       queryParams.removeWhere((key, value) => value == null);
 
-      print('📡 DIO REQUEST: GET /admin/dashboard?${queryParams.entries.map((e) => '${e.key}=${e.value}').join('&')}');
+      final queryString = queryParams.entries.map((e) => '${e.key}=${e.value}').join('&');
+      print('📡 DIO REQUEST: GET /admin/dashboard?$queryString');
       final response = await dio.get('/admin/dashboard', queryParameters: queryParams);
       if (response.statusCode == 200) {
         return DashboardDataModel.fromJson(response.data);
