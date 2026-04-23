@@ -58,7 +58,9 @@ flutter build apk "$FLUTTER_BUILD_TYPE" \
   --dart-define="AUTH0_CLIENT_ID=$AUTH0_CLIENT_ID" \
   --dart-define="AUTH0_AUDIENCE=$AUTH0_AUDIENCE"
 
+mv build/app/outputs/flutter-apk/app-$BUILD_TYPE.apk build/app/outputs/flutter-apk/ReservaloYA-1.0.0.apk
+
 echo "========================================"
 echo "Build complete!"
-echo "APK: build/app/outputs/flutter-apk/app-$BUILD_TYPE.apk"
+echo "APK: build/app/outputs/flutter-apk/ReservaloYA-1.0.0.apk"
 echo "========================================"

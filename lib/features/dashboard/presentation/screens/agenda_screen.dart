@@ -32,14 +32,16 @@ class _AgendaScreenState extends State<AgendaScreen> {
 
     _horizontalBodyController.addListener(() {
       if (_horizontalHeaderController.hasClients &&
-          _horizontalHeaderController.offset != _horizontalBodyController.offset) {
+          _horizontalHeaderController.offset !=
+              _horizontalBodyController.offset) {
         _horizontalHeaderController.jumpTo(_horizontalBodyController.offset);
       }
     });
 
     _horizontalHeaderController.addListener(() {
       if (_horizontalBodyController.hasClients &&
-          _horizontalBodyController.offset != _horizontalHeaderController.offset) {
+          _horizontalBodyController.offset !=
+              _horizontalHeaderController.offset) {
         _horizontalBodyController.jumpTo(_horizontalHeaderController.offset);
       }
     });
@@ -279,14 +281,18 @@ class _AgendaScreenState extends State<AgendaScreen> {
                   ),
                 ),
                 onPressed: () {
+                  final now = DateTime.now().toUtc();
                   final dateStr = DateFormat(
                     'yyyy-MM-dd',
                   ).format(_selectedDate);
+                  final hourStr = now.hour.toString().padLeft(2, '0');
+                  final minStr = now.minute.toString().padLeft(2, '0');
                   final Map<String, dynamic> bookingData = {
                     'court_id': courtId,
                     'sport_center_id': _selectedSportCenterId,
-                    'date': '${dateStr}T00:00:00Z',
+                    'date': '${dateStr}T${hourStr}:${minStr}:00.000+00:00',
                     'hour': slot.hour,
+                    'minutes': slot.minutes,
                     'price': isBlocked
                         ? 0.0
                         : (double.tryParse(priceController.text) ?? slot.price),
@@ -799,7 +805,8 @@ class _AgendaScreenState extends State<AgendaScreen> {
                                   break;
                                 }
                               }
-                              final slot = foundSlot ??
+                              final slot =
+                                  foundSlot ??
                                   TimeSlot(
                                     hour: hour,
                                     minutes: 0,
