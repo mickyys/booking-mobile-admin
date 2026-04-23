@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:reservaloya_admin/core/theme/app_colors.dart';
 import 'package:reservaloya_admin/core/widgets/app_navigation_bar.dart';
 import 'package:reservaloya_admin/core/widgets/app_drawer.dart';
@@ -324,6 +326,15 @@ class _AgendaScreenState extends State<AgendaScreen> {
     final booking = slot.booking;
     if (booking == null) return;
 
+    final phone = booking.customerPhone;
+    final formattedPhone = _formatPhoneForWhatsApp(phone);
+    
+    final sportCenterName = _availableCenters.isNotEmpty
+        ? (_availableCenters.first.sportCenter.slug.isNotEmpty
+            ? _availableCenters.first.sportCenter.slug
+            : _availableCenters.first.sportCenter.name)
+        : '';
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -336,11 +347,53 @@ class _AgendaScreenState extends State<AgendaScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _detailRow('Cliente:', booking.customerName),
-            _detailRow('Teléfono:', booking.customerPhone),
+            _detailRow('Cliente:', _capitalizeName(booking.customerName)),
+            _detailRow('Teléfono:', phone.isEmpty ? 'No informado' : phone),
             _detailRow('Código:', booking.bookingCode),
             _detailRow('Método:', _getPaymentMethodLabel(booking.paymentMethod)),
-            _detailRow('Precio:', '${booking.price.toInt()}'),
+            _detailRow('Precio:', _formatPrice(booking.price)),
+            if (formattedPhone != null) ...[
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () => _openWhatsApp(
+                        formattedPhone,
+                        booking.customerName,
+                        _selectedDate,
+                        slot.hour,
+                        slot.minutes,
+                        sportCenterName,
+                      ),
+                      child: FaIcon(FontAwesomeIcons.whatsapp, size: 22),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () => _makePhoneCall(formattedPhone),
+                      child: FaIcon(FontAwesomeIcons.phone, color: Colors.white, size: 22),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
         actions: [
@@ -368,6 +421,74 @@ class _AgendaScreenState extends State<AgendaScreen> {
         ],
       ),
     );
+  }
+
+  String? _formatPhoneForWhatsApp(String phone) {
+    if (phone.isEmpty) return null;
+
+    final digits = phone.replaceAll(RegExp(r'[^\d]'), '');
+    
+    if (digits.length == 8) {
+      return '+569$digits';
+    } else if (digits.length == 9 && digits.startsWith('9')) {
+      return '+56$digits';
+    } else if (digits.length == 10 && digits.startsWith('56')) {
+      return '+$digits';
+    } else if (digits.length == 11 && digits.startsWith('569')) {
+      return '+$digits';
+    } else if (phone.startsWith('+56') && digits.length == 11) {
+      return phone;
+    } else if (phone.startsWith('+56') && digits.length == 10) {
+      return '+$digits';
+    }
+    
+    return null;
+  }
+
+  Future<void> _openWhatsApp(
+    String phone,
+    String customerName,
+    DateTime date,
+    int hour,
+    int minutes,
+    String sportCenterName,
+  ) async {
+    final formattedDate = DateFormat('dd/MM/yyyy').format(date);
+    final hourStr = hour.toString().padLeft(2, '0');
+    final minStr = minutes.toString().padLeft(2, '0');
+    final sportCenterCapitalized = _capitalizeName(sportCenterName);
+    
+    final message = Uri.encodeComponent(
+      'Hola $customerName te contactamos desde $sportCenterCapitalized por tu reserva para el dia $formattedDate a la hora $hourStr:$minStr',
+    );
+    final uri = Uri.parse('https://wa.me/$phone?text=$message');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  Future<void> _makePhoneCall(String phone) async {
+    final uri = Uri.parse('tel:$phone');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
+
+  String _capitalizeName(String name) {
+    if (name.isEmpty) return name;
+    return name.split(' ').map((word) {
+      if (word.isEmpty) return word;
+      return word[0].toUpperCase() + word.substring(1).toLowerCase();
+    }).join(' ');
+  }
+
+  String _formatPrice(double price) {
+    final formatter = NumberFormat.currency(
+      locale: 'es_CL',
+      symbol: '\$',
+      decimalDigits: 0,
+    );
+    return formatter.format(price);
   }
 
   String _getPaymentMethodLabel(String method) {
@@ -699,20 +820,19 @@ class _AgendaScreenState extends State<AgendaScreen> {
       );
     }
 
-    final hours = <int>{};
+    final allSlots = <String>{};
     for (var schedule in schedules) {
       for (var slot in schedule.slots) {
-        hours.add(slot.hour);
+        allSlots.add('${slot.hour}:${slot.minutes}');
       }
     }
-    final sortedHours = hours.toList()..sort();
+    final sortedSlotKeys = allSlots.toList()..sort();
 
     const double hourColWidth = 80.0;
     const double columnWidth = 140.0;
 
     return Column(
       children: [
-        // Court Headers (Sticky vertically, scrollable horizontally)
         Container(
           padding: const EdgeInsets.only(bottom: 8),
           child: Row(
@@ -779,7 +899,10 @@ class _AgendaScreenState extends State<AgendaScreen> {
                 SizedBox(
                   width: hourColWidth,
                   child: Column(
-                    children: sortedHours.map((hour) {
+                    children: sortedSlotKeys.map((slotKey) {
+                      final parts = slotKey.split(':');
+                      final hour = int.parse(parts[0]);
+                      final minutes = int.parse(parts[1]);
                       return SizedBox(
                         height: 100,
                         child: Container(
@@ -790,7 +913,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                '${hour.toString().padLeft(2, '0')}:00',
+                                '${hour.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}',
                                 style: GoogleFonts.manrope(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -818,14 +941,17 @@ class _AgendaScreenState extends State<AgendaScreen> {
                     controller: _horizontalBodyController,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: sortedHours.map((hour) {
+                      children: sortedSlotKeys.map((slotKey) {
+                        final parts = slotKey.split(':');
+                        final hour = int.parse(parts[0]);
+                        final minutes = int.parse(parts[1]);
                         return SizedBox(
                           height: 100,
                           child: Row(
                             children: schedules.map((court) {
                               TimeSlot? foundSlot;
                               for (final s in court.slots) {
-                                if (s.hour == hour) {
+                                if (s.hour == hour && s.minutes == minutes) {
                                   foundSlot = s;
                                   break;
                                 }
@@ -834,7 +960,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
                                   foundSlot ??
                                   TimeSlot(
                                     hour: hour,
-                                    minutes: 0,
+                                    minutes: minutes,
                                     price: 0.0,
                                     status: 'closed',
                                     paymentRequired: false,
