@@ -540,7 +540,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.onPrimary,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: () {
@@ -580,6 +580,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return 'Cancelado';
       default:
         return status;
+    }
+  }
+
+  String _getPaymentMethodLabel(String method) {
+    switch (method.toLowerCase()) {
+      case 'mercadopago':
+        return 'MercadoPago';
+      case 'fintoc':
+        return 'Fintoc';
+      case 'flow':
+        return 'Flow';
+      case 'presential':
+      case 'presencial':
+      case 'venue':
+        return 'Presencial';
+      case 'internal':
+      case 'interno':
+      case 'internal_block':
+      case 'internal_reservation':
+        return 'Interno';
+      default:
+        return method;
     }
   }
 

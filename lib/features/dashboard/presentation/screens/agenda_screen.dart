@@ -339,7 +339,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
             _detailRow('Cliente:', booking.customerName),
             _detailRow('Teléfono:', booking.customerPhone),
             _detailRow('Código:', booking.bookingCode),
-            _detailRow('Método:', booking.paymentMethod.toUpperCase()),
+            _detailRow('Método:', _getPaymentMethodLabel(booking.paymentMethod)),
             _detailRow('Precio:', '${booking.price.toInt()}'),
           ],
         ),
@@ -349,7 +349,10 @@ class _AgendaScreenState extends State<AgendaScreen> {
             child: const Text('Cerrar'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: AppColors.onPrimary,
+            ),
             onPressed: () {
               context.read<AgendaBloc>().add(
                 CancelBookingEvent(
@@ -365,6 +368,28 @@ class _AgendaScreenState extends State<AgendaScreen> {
         ],
       ),
     );
+  }
+
+  String _getPaymentMethodLabel(String method) {
+    switch (method.toLowerCase()) {
+      case 'mercadopago':
+        return 'MercadoPago';
+      case 'fintoc':
+        return 'Fintoc';
+      case 'flow':
+        return 'Flow';
+      case 'presential':
+      case 'presencial':
+      case 'venue':
+        return 'Presencial';
+      case 'internal':
+      case 'interno':
+      case 'internal_block':
+      case 'internal_reservation':
+        return 'Interno';
+      default:
+        return method;
+    }
   }
 
   Widget _detailRow(String label, String value) {

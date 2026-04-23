@@ -126,7 +126,10 @@ class _CourtsScreenState extends State<CourtsScreen> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: AppColors.onPrimary,
+            ),
             onPressed: () {
               context.read<AgendaBloc>().add(DeleteCourtEvent(courtId: court.id));
               Navigator.pop(context);

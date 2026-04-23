@@ -12,6 +12,8 @@ cd "$SCRIPT_DIR"
 BUILD_TYPE="release"
 CLEAN=""
 
+VERSION="1.0.1"
+
 # Parse arguments
 for arg in "$@"; do
     case $arg in
@@ -23,6 +25,9 @@ for arg in "$@"; do
             ;;
         clean)
             CLEAN="true"
+            ;;
+        v=*)
+            VERSION="${arg#v=}"
             ;;
     esac
 done
@@ -58,9 +63,9 @@ flutter build apk "$FLUTTER_BUILD_TYPE" \
   --dart-define="AUTH0_CLIENT_ID=$AUTH0_CLIENT_ID" \
   --dart-define="AUTH0_AUDIENCE=$AUTH0_AUDIENCE"
 
-mv build/app/outputs/flutter-apk/app-$BUILD_TYPE.apk build/app/outputs/flutter-apk/ReservaloYA-1.0.0.apk
+mv build/app/outputs/flutter-apk/app-$BUILD_TYPE.apk build/app/outputs/flutter-apk/ReservaloYA-$VERSION.apk
 
 echo "========================================"
 echo "Build complete!"
-echo "APK: build/app/outputs/flutter-apk/ReservaloYA-1.0.0.apk"
+echo "APK: build/app/outputs/flutter-apk/ReservaloYA-$VERSION.apk"
 echo "========================================"
