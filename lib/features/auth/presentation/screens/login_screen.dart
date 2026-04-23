@@ -87,17 +87,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   Text(
                     'ReservaloYA',
                     style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                          color: AppColors.primary,
-                          letterSpacing: -1,
-                        ),
+                      color: AppColors.primary,
+                      letterSpacing: -1,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Panel de Administración',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: AppColors.onSurfaceVariant,
-                          fontWeight: FontWeight.normal,
-                        ),
+                      color: AppColors.onSurfaceVariant,
+                      fontWeight: FontWeight.normal,
+                    ),
                   ),
                   const SizedBox(height: 64),
                   _buildLabel('Correo Electrónico'),
@@ -106,7 +106,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _emailController,
                     decoration: const InputDecoration(
                       hintText: 'admin@reservaloya.cl',
-                      prefixIcon: Icon(Icons.email_outlined, color: AppColors.onSurfaceVariant),
+                      prefixIcon: Icon(
+                        Icons.email_outlined,
+                        color: AppColors.onSurfaceVariant,
+                      ),
                     ),
                     keyboardType: TextInputType.emailAddress,
                     style: const TextStyle(color: AppColors.onSurface),
@@ -118,10 +121,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _passwordController,
                     decoration: InputDecoration(
                       hintText: '••••••••',
-                      prefixIcon: const Icon(Icons.lock_outline, color: AppColors.onSurfaceVariant),
+                      prefixIcon: const Icon(
+                        Icons.lock_outline,
+                        color: AppColors.onSurfaceVariant,
+                      ),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                          _obscurePassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
                           color: AppColors.onSurfaceVariant,
                         ),
                         onPressed: () {
@@ -150,7 +158,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           activeColor: AppColors.primary,
                           checkColor: AppColors.onPrimary,
                           side: const BorderSide(color: AppColors.outline),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -162,9 +172,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                         child: Text(
                           'Recordarme',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: AppColors.onSurface,
-                              ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppColors.onSurface),
                         ),
                       ),
                       const Spacer(),
@@ -172,7 +181,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: () {},
                         child: Text(
                           '¿Olvidaste tu contraseña?',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
                                 color: AppColors.primary,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -189,17 +199,20 @@ class _LoginScreenState extends State<LoginScreen> {
                             text: 'Iniciar Sesión',
                             isLoading: state is AuthLoading,
                             onPressed: () {
-                              if (_emailController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
+                              if (_emailController.text.isNotEmpty &&
+                                  _passwordController.text.isNotEmpty) {
                                 context.read<AuthBloc>().add(
-                                      LoginRequested(
-                                        email: _emailController.text,
-                                        password: _passwordController.text,
-                                      ),
-                                    );
+                                  LoginRequested(
+                                    email: _emailController.text,
+                                    password: _passwordController.text,
+                                  ),
+                                );
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text('Por favor, ingresa tus credenciales'),
+                                    content: Text(
+                                      'Por favor, ingresa tus credenciales',
+                                    ),
                                     backgroundColor: Colors.orange,
                                   ),
                                 );
@@ -214,10 +227,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 48),
                   Center(
                     child: Text(
-                      'Versión 1.0.0',
+                      'Versión 1.0.1',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.onSurfaceVariant,
-                          ),
+                        color: AppColors.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ],
@@ -233,10 +246,10 @@ class _LoginScreenState extends State<LoginScreen> {
     return Text(
       text,
       style: Theme.of(context).textTheme.labelMedium?.copyWith(
-            color: AppColors.onSurfaceVariant,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.5,
-          ),
+        color: AppColors.onSurfaceVariant,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.5,
+      ),
     );
   }
 }

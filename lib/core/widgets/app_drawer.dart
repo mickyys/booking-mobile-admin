@@ -94,7 +94,7 @@ class AppDrawer extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Text(
-                    'Versión 1.0.0',
+                    'Versión 1.0.1',
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       color: AppColors.onSurfaceVariant,
@@ -166,7 +166,9 @@ class AppDrawer extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       decoration: BoxDecoration(
-        color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+        color: isSelected
+            ? AppColors.primary.withOpacity(0.1)
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
       ),
       child: ListTile(

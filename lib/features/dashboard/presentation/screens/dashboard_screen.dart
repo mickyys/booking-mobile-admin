@@ -592,13 +592,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
         color = Colors.blue;
         text = 'MERCADO PAGO';
         break;
+      case 'fintoc':
+        color = Colors.indigo;
+        text = 'FINTOC';
+        break;
+      case 'flow':
+        color = Colors.purple;
+        text = 'FLOW';
+        break;
       case 'presential':
       case 'presencial':
+      case 'venue':
         color = Colors.orange;
         text = 'PRESENCIAL';
         break;
       case 'internal':
       case 'interno':
+      case 'internal_block':
+      case 'internal_reservation':
         color = AppColors.primary;
         text = 'INTERNO';
         break;
