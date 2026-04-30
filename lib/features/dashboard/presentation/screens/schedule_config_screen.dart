@@ -5,7 +5,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_navigation_bar.dart';
 import '../../../../core/widgets/app_drawer.dart';
 import '../../../../core/widgets/tonal_card.dart';
-import '../../../../injection_container.dart';
 import '../../domain/entities/schedule.dart';
 import '../../domain/entities/sport_center.dart';
 import '../bloc/schedule_bloc.dart';
@@ -26,10 +25,7 @@ class ScheduleConfigScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => sl<ScheduleBloc>()..add(LoadScheduleData()),
-      child: const ScheduleConfigView(),
-    );
+    return const ScheduleConfigView();
   }
 }
 
@@ -43,6 +39,12 @@ class ScheduleConfigView extends StatefulWidget {
 class _ScheduleConfigViewState extends State<ScheduleConfigView> {
   AdminCourt? selectedCourt;
   int? selectedDay;
+
+  @override
+  void initState() {
+    super.initState();
+    context.read<ScheduleBloc>().add(LoadScheduleData());
+  }
 
   List<TimeSlot> get filteredSlots {
     final court = selectedCourt;
@@ -387,7 +389,10 @@ class _ScheduleConfigViewState extends State<ScheduleConfigView> {
                   _buildSwitchOption('Abono', slot.partialPaymentEnabled, (
                     val,
                   ) {
-                    _updateSlot(slot.copyWith(partialPaymentEnabled: val));
+                    _updateSlot(slot.copyWith(
+                      partialPaymentEnabled: val,
+                      paymentRequired: val ? true : slot.paymentRequired,
+                    ));
                   }),
                   IconButton(
                     icon: const Icon(

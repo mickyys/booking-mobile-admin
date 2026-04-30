@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'core/theme/app_theme.dart';
+import 'core/firebase_options.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
 import 'features/dashboard/presentation/bloc/dashboard_bloc.dart';
@@ -19,11 +22,21 @@ import 'features/recurring/presentation/screens/recurring_screen.dart';
 import 'features/dashboard/presentation/bloc/schedule_bloc.dart';
 import 'features/dashboard/presentation/bloc/settings_bloc.dart';
 import 'features/users/presentation/screens/users_screen.dart';
+import 'features/notification/presentation/notification_manager.dart';
 import 'injection_container.dart' as di;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  
   await di.init();
+  
+  final notificationManager = di.sl<NotificationManager>();
+  await notificationManager.initialize();
+  
   await initializeDateFormatting('es', null);
   runApp(const MyApp());
 }
@@ -78,8 +91,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
+    return MultiProvider(
       providers: [
+        Provider(create: (_) => di.sl<NotificationManager>()),
         BlocProvider(create: (_) => di.sl<AuthBloc>()),
         BlocProvider(create: (_) => di.sl<DashboardBloc>()),
         BlocProvider(create: (_) => di.sl<AgendaBloc>()),

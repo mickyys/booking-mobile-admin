@@ -45,6 +45,12 @@ import 'package:reservaloya_admin/features/users/data/repositories/users_reposit
 import 'package:reservaloya_admin/features/users/domain/repositories/users_repository.dart';
 import 'package:reservaloya_admin/features/users/domain/usecases/get_users_usecase.dart';
 import 'package:reservaloya_admin/features/users/presentation/bloc/users_bloc.dart';
+import 'package:reservaloya_admin/features/notification/data/datasources/notification_remote_data_source.dart';
+import 'package:reservaloya_admin/features/notification/data/datasources/notification_remote_data_source_impl.dart';
+import 'package:reservaloya_admin/features/notification/data/repositories/notification_repository_impl.dart';
+import 'package:reservaloya_admin/features/notification/domain/repositories/notification_repository.dart';
+import 'package:reservaloya_admin/features/notification/domain/usecases/register_device_usecase.dart';
+import 'package:reservaloya_admin/features/notification/presentation/notification_manager.dart';
 
 
 final sl = GetIt.instance;
@@ -84,7 +90,12 @@ Future<void> init() async {
   );
   sl.registerLazySingleton(() => LoginUseCase(sl()));
   sl.registerLazySingleton(() => SocialLoginUseCase(sl()));
-  sl.registerFactory(() => AuthBloc(loginUseCase: sl(), socialLoginUseCase: sl()));
+  sl.registerFactory(() => AuthBloc(
+    loginUseCase: sl(),
+    socialLoginUseCase: sl(),
+    registerDeviceUseCase: sl(),
+    notificationManager: sl(),
+  ));
 
   sl.registerLazySingleton<DashboardRemoteDataSource>(
     () => DashboardRemoteDataSourceImpl(dio: sl()),
@@ -147,4 +158,13 @@ Future<void> init() async {
   );
   sl.registerLazySingleton(() => GetUsersUseCase(repository: sl()));
   sl.registerFactory(() => UsersBloc(getUsersUseCase: sl()));
+
+  sl.registerLazySingleton<NotificationRemoteDataSource>(
+    () => NotificationRemoteDataSourceImpl(dio: sl()),
+  );
+  sl.registerLazySingleton<NotificationRepository>(
+    () => NotificationRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
+  );
+  sl.registerLazySingleton(() => RegisterDeviceUseCase(sl()));
+  sl.registerSingleton<NotificationManager>(NotificationManager());
 }

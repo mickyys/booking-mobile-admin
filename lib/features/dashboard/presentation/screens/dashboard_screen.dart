@@ -9,6 +9,7 @@ import '../../../../core/widgets/app_drawer.dart';
 import '../../../../core/widgets/tonal_card.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
+import '../../../notification/presentation/notification_manager.dart';
 import '../bloc/dashboard_bloc.dart';
 import '../bloc/dashboard_event.dart';
 import '../bloc/dashboard_state.dart';
@@ -31,7 +32,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    _checkNotificationNavigation();
     _loadData();
+  }
+
+  void _checkNotificationNavigation() {
+    final notificationManager = context.read<NotificationManager>();
+    final bookingId = notificationManager.getInitialBookingId();
+    
+    if (bookingId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showBookingDetail(bookingId);
+      });
+    }
+  }
+
+  void _showBookingDetail(String bookingId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Detalle de Reserva'),
+        content: Text('Reserva ID: $bookingId'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cerrar'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
