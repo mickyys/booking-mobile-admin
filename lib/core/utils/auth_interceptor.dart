@@ -1,10 +1,16 @@
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../features/auth/domain/repositories/auth_repository.dart';
 
 class AuthInterceptor extends Interceptor {
   final SharedPreferences sharedPreferences;
+  final AuthRepository authRepository;
+  bool _isRefreshing = false;
 
-  AuthInterceptor({required this.sharedPreferences});
+  AuthInterceptor({
+    required this.sharedPreferences,
+    required this.authRepository,
+  });
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
@@ -35,7 +41,7 @@ class AuthInterceptor extends Interceptor {
   }
 
   @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
     print(
       'DIO ERROR: [${err.requestOptions.method}] ${err.requestOptions.baseUrl}${err.requestOptions.path}',
     );
@@ -44,7 +50,41 @@ class AuthInterceptor extends Interceptor {
       print('STATUS CODE: ${err.response?.statusCode}');
       print('RESPONSE DATA: ${err.response?.data}');
     }
-    super.onError(err, handler);
+
+    if (err.response?.statusCode == 401 && !_isRefreshing) {
+      print('🔄 DIO: 401 detected, attempting token refresh');
+      _isRefreshing = true;
+
+      final result = await authRepository.refreshToken();
+      _isRefreshing = false;
+
+      result.fold(
+        (_) {
+          print('❌ DIO: Token refresh failed');
+          handler.next(err);
+        },
+        (user) async {
+          print('✅ DIO: Token refreshed successfully, retrying request');
+          try {
+            final opts = err.requestOptions;
+            opts.headers['Authorization'] = 'Bearer ${user.token}';
+
+            final retryDio = Dio(BaseOptions(
+              baseUrl: opts.baseUrl,
+              connectTimeout: opts.connectTimeout,
+              receiveTimeout: opts.receiveTimeout,
+            ));
+            final response = await retryDio.fetch(opts);
+            handler.resolve(response);
+          } catch (retryErr) {
+            print('❌ DIO: Retry after refresh also failed');
+            handler.next(err);
+          }
+        },
+      );
+    } else {
+      super.onError(err, handler);
+    }
   }
 
   @override

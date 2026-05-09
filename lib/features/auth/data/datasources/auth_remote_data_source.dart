@@ -7,6 +7,7 @@ abstract class AuthRemoteDataSource {
   Future<UserModel> login(String email, String password);
   Future<UserModel> loginWithSocial(String connection);
   Future<String> getAccessTokenSilently();
+  Future<UserModel> refreshToken();
   Future<void> logout();
 }
 
@@ -87,6 +88,27 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       debugPrint('AUTH0: getAccessTokenSilently failed - Error: $e');
       debugPrint('AUTH0: Stack trace: $stack');
       throw Exception('Failed to get token: $e');
+    }
+  }
+
+  @override
+  Future<UserModel> refreshToken() async {
+    try {
+      debugPrint('AUTH0: Refreshing token silently');
+      final credentials = await auth0.credentialsManager.credentials(
+        scopes: {'openid', 'profile', 'email'},
+      );
+      debugPrint('AUTH0: Token refreshed - User: ${credentials.user.sub}');
+      return UserModel(
+        id: credentials.user.sub,
+        name: credentials.user.name ?? '',
+        email: credentials.user.email ?? '',
+        token: credentials.accessToken,
+      );
+    } catch (e, stack) {
+      debugPrint('AUTH0: Token refresh failed - Error: $e');
+      debugPrint('AUTH0: Stack trace: $stack');
+      throw Exception('Token refresh failed: $e');
     }
   }
 

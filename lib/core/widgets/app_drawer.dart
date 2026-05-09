@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
+import '../utils/app_version.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/presentation/bloc/auth_state.dart';
 import '../../features/auth/presentation/bloc/auth_event.dart';
@@ -93,12 +94,18 @@ class AppDrawer extends StatelessWidget {
                 const Divider(color: Colors.white10, height: 1),
                 Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Text(
-                    'Versión 1.0.1',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: AppColors.onSurfaceVariant,
-                    ),
+                  child: FutureBuilder<String>(
+                    future: AppVersion.getVersion(),
+                    builder: (context, snapshot) {
+                      final version = snapshot.data ?? '1.0.0';
+                      return Text(
+                        'Versión $version',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      );
+                    },
                   ),
                 ),
                 _buildLogoutItem(context),
@@ -209,7 +216,6 @@ class AppDrawer extends StatelessWidget {
       ),
       onTap: () {
         context.read<AuthBloc>().add(LogoutRequested());
-        context.go('/login');
       },
     );
   }

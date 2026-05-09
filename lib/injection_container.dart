@@ -8,6 +8,7 @@ import 'package:reservaloya_admin/features/auth/data/datasources/auth_remote_dat
 import 'package:reservaloya_admin/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:reservaloya_admin/features/auth/domain/repositories/auth_repository.dart';
 import 'package:reservaloya_admin/features/auth/domain/usecases/login_usecase.dart';
+import 'package:reservaloya_admin/features/auth/domain/usecases/refresh_token_usecase.dart';
 import 'package:reservaloya_admin/features/auth/domain/usecases/social_login_usecase.dart';
 import 'package:reservaloya_admin/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:reservaloya_admin/features/dashboard/data/datasources/dashboard_remote_data_source.dart';
@@ -62,6 +63,17 @@ Future<void> init() async {
   sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(connectivity: sl()));
   sl.registerLazySingleton(() => Connectivity());
 
+  sl.registerLazySingleton<Auth0>(() => Auth0(
+    AppConfig.auth0Domain,
+    AppConfig.auth0ClientId,
+  ));
+  sl.registerLazySingleton<AuthRemoteDataSource>(
+    () => AuthRemoteDataSourceImpl(auth0: sl()),
+  );
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(remoteDataSource: sl(), sharedPreferences: sl()),
+  );
+
   final dio = Dio(
     BaseOptions(
       baseUrl: AppConfig.apiUrl,
@@ -69,7 +81,10 @@ Future<void> init() async {
       receiveTimeout: const Duration(seconds: 10),
     ),
   );
-  dio.interceptors.add(AuthInterceptor(sharedPreferences: sl()));
+  dio.interceptors.add(AuthInterceptor(
+    sharedPreferences: sl(),
+    authRepository: sl(),
+  ));
   dio.interceptors.add(LogInterceptor(
     requestBody: true,
     responseBody: true,
@@ -77,22 +92,14 @@ Future<void> init() async {
   ));
   sl.registerLazySingleton(() => dio);
 
-  sl.registerLazySingleton<Auth0>(() => Auth0(
-    AppConfig.auth0Domain,
-    AppConfig.auth0ClientId,
-  ));
-
-  sl.registerLazySingleton<AuthRemoteDataSource>(
-    () => AuthRemoteDataSourceImpl(auth0: sl()),
-  );
-  sl.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(remoteDataSource: sl(), sharedPreferences: sl()),
-  );
   sl.registerLazySingleton(() => LoginUseCase(sl()));
   sl.registerLazySingleton(() => SocialLoginUseCase(sl()));
+  sl.registerLazySingleton(() => RefreshTokenUseCase(sl()));
   sl.registerFactory(() => AuthBloc(
     loginUseCase: sl(),
     socialLoginUseCase: sl(),
+    refreshTokenUseCase: sl(),
+    authRepository: sl(),
     registerDeviceUseCase: sl(),
     notificationManager: sl(),
   ));

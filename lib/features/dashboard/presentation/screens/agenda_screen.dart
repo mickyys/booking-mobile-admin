@@ -22,6 +22,7 @@ class AgendaScreen extends StatefulWidget {
 
 class _AgendaScreenState extends State<AgendaScreen> {
   DateTime _selectedDate = DateTime.now();
+  int _dayOffset = 0;
   String? _selectedSportCenterId;
   List<AdminSportCenterCourts> _availableCenters = [];
   final ScrollController _horizontalHeaderController = ScrollController();
@@ -507,7 +508,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
       case 'interno':
       case 'internal_block':
       case 'internal_reservation':
-        return 'Interno';
+        return 'Presencial';
       default:
         return method;
     }
@@ -697,70 +698,100 @@ class _AgendaScreenState extends State<AgendaScreen> {
   }
 
   Widget _buildDateSelector() {
+    final startDate = DateTime.now().add(Duration(days: _dayOffset));
+
     return Container(
       height: 100,
       margin: const EdgeInsets.symmetric(vertical: 16),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: 14,
-        itemBuilder: (context, index) {
-          final date = DateTime.now().add(Duration(days: index));
-          final isSelected =
-              DateFormat('yyyy-MM-dd').format(date) ==
-              DateFormat('yyyy-MM-dd').format(_selectedDate);
-
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                _selectedDate = date;
-              });
-              _loadAgenda();
-            },
-            child: Container(
-              width: 70,
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary : AppColors.surfaceHigh,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    DateFormat('EEE', 'es').format(date).toUpperCase(),
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: isSelected
-                          ? AppColors.onPrimary
-                          : AppColors.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    DateFormat('d').format(date),
-                    style: GoogleFonts.manrope(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: isSelected ? AppColors.onPrimary : Colors.white,
-                    ),
-                  ),
-                  if (isSelected)
-                    Container(
-                      margin: const EdgeInsets.only(top: 4),
-                      width: 4,
-                      height: 4,
-                      decoration: const BoxDecoration(
-                        color: AppColors.onPrimary,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                ],
-              ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 44,
+            child: IconButton(
+              icon: const Icon(Icons.chevron_left, color: AppColors.primary),
+              onPressed: () {
+                setState(() {
+                  _dayOffset--;
+                });
+              },
             ),
-          );
-        },
+          ),
+          Expanded(
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: EdgeInsets.zero,
+              itemCount: 14,
+              itemBuilder: (context, index) {
+                final date = startDate.add(Duration(days: index));
+                final isSelected =
+                    DateFormat('yyyy-MM-dd').format(date) ==
+                    DateFormat('yyyy-MM-dd').format(_selectedDate);
+
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedDate = date;
+                    });
+                    _loadAgenda();
+                  },
+                  child: Container(
+                    width: 70,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      color: isSelected ? AppColors.primary : AppColors.surfaceHigh,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          DateFormat('EEE', 'es').format(date).toUpperCase(),
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isSelected
+                                ? AppColors.onPrimary
+                                : AppColors.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          DateFormat('d').format(date),
+                          style: GoogleFonts.manrope(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: isSelected ? AppColors.onPrimary : Colors.white,
+                          ),
+                        ),
+                        if (isSelected)
+                          Container(
+                            margin: const EdgeInsets.only(top: 4),
+                            width: 4,
+                            height: 4,
+                            decoration: const BoxDecoration(
+                              color: AppColors.onPrimary,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          SizedBox(
+            width: 44,
+            child: IconButton(
+              icon: const Icon(Icons.chevron_right, color: AppColors.primary),
+              onPressed: () {
+                setState(() {
+                  _dayOffset++;
+                });
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1032,7 +1063,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
         return GestureDetector(
           onTap: () => _showBookingDetailsDialog(slot),
           child: Container(
-            height: 80,
+            height: 90,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: AppColors.surfaceHigh,
@@ -1065,6 +1096,17 @@ class _AgendaScreenState extends State<AgendaScreen> {
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _getPaymentMethodLabel(slot.booking?.paymentMethod ?? ''),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.inter(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white54,
                   ),
                 ),
                 const Spacer(),

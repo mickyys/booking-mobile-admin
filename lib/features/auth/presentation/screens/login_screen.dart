@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/app_version.dart';
 import '../../../../core/widgets/gradient_button.dart';
 import '../../../../injection_container.dart';
 import '../bloc/auth_bloc.dart';
@@ -21,11 +22,20 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _rememberMe = false;
+  String _appVersion = '1.0.0';
 
   @override
   void initState() {
     super.initState();
     _loadSavedCredentials();
+    _loadAppVersion();
+  }
+
+  Future<void> _loadAppVersion() async {
+    final version = await AppVersion.getVersion();
+    if (mounted) {
+      setState(() => _appVersion = version);
+    }
   }
 
   Future<void> _loadSavedCredentials() async {
@@ -227,7 +237,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 48),
                   Center(
                     child: Text(
-                      'Versión 1.0.1',
+                      'Versión $_appVersion',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AppColors.onSurfaceVariant,
                       ),

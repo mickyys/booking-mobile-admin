@@ -27,3 +27,7 @@ class SocialLoginRequested extends AuthEvent {
 }
 
 class LogoutRequested extends AuthEvent {}
+
+class AppStarted extends AuthEvent {}
+
+class RefreshTokenRequested extends AuthEvent {}
