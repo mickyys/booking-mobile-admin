@@ -329,11 +329,11 @@ class _AgendaScreenState extends State<AgendaScreen> {
 
     final phone = booking.customerPhone;
     final formattedPhone = _formatPhoneForWhatsApp(phone);
-    
+
     final sportCenterName = _availableCenters.isNotEmpty
         ? (_availableCenters.first.sportCenter.slug.isNotEmpty
-            ? _availableCenters.first.sportCenter.slug
-            : _availableCenters.first.sportCenter.name)
+              ? _availableCenters.first.sportCenter.slug
+              : _availableCenters.first.sportCenter.name)
         : '';
 
     showDialog(
@@ -351,7 +351,10 @@ class _AgendaScreenState extends State<AgendaScreen> {
             _detailRow('Cliente:', _capitalizeName(booking.customerName)),
             _detailRow('Teléfono:', phone.isEmpty ? 'No informado' : phone),
             _detailRow('Código:', booking.bookingCode),
-            _detailRow('Método:', _getPaymentMethodLabel(booking.paymentMethod)),
+            _detailRow(
+              'Método:',
+              _getPaymentMethodLabel(booking.paymentMethod),
+            ),
             _detailRow('Precio:', _formatPrice(booking.price)),
             if (formattedPhone != null) ...[
               const SizedBox(height: 16),
@@ -389,7 +392,11 @@ class _AgendaScreenState extends State<AgendaScreen> {
                         ),
                       ),
                       onPressed: () => _makePhoneCall(formattedPhone),
-                      child: FaIcon(FontAwesomeIcons.phone, color: Colors.white, size: 22),
+                      child: FaIcon(
+                        FontAwesomeIcons.phone,
+                        color: Colors.white,
+                        size: 22,
+                      ),
                     ),
                   ),
                 ],
@@ -428,7 +435,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
     if (phone.isEmpty) return null;
 
     final digits = phone.replaceAll(RegExp(r'[^\d]'), '');
-    
+
     if (digits.length == 8) {
       return '+569$digits';
     } else if (digits.length == 9 && digits.startsWith('9')) {
@@ -442,7 +449,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
     } else if (phone.startsWith('+56') && digits.length == 10) {
       return '+$digits';
     }
-    
+
     return null;
   }
 
@@ -458,7 +465,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
     final hourStr = hour.toString().padLeft(2, '0');
     final minStr = minutes.toString().padLeft(2, '0');
     final sportCenterCapitalized = _capitalizeName(sportCenterName);
-    
+
     final message = Uri.encodeComponent(
       'Hola $customerName te contactamos desde $sportCenterCapitalized por tu reserva para el dia $formattedDate a la hora $hourStr:$minStr',
     );
@@ -477,10 +484,13 @@ class _AgendaScreenState extends State<AgendaScreen> {
 
   String _capitalizeName(String name) {
     if (name.isEmpty) return name;
-    return name.split(' ').map((word) {
-      if (word.isEmpty) return word;
-      return word[0].toUpperCase() + word.substring(1).toLowerCase();
-    }).join(' ');
+    return name
+        .split(' ')
+        .map((word) {
+          if (word.isEmpty) return word;
+          return word[0].toUpperCase() + word.substring(1).toLowerCase();
+        })
+        .join(' ');
   }
 
   String _formatPrice(double price) {
@@ -738,7 +748,9 @@ class _AgendaScreenState extends State<AgendaScreen> {
                     width: 70,
                     margin: const EdgeInsets.symmetric(horizontal: 4),
                     decoration: BoxDecoration(
-                      color: isSelected ? AppColors.primary : AppColors.surfaceHigh,
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.surfaceHigh,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Column(
@@ -760,7 +772,9 @@ class _AgendaScreenState extends State<AgendaScreen> {
                           style: GoogleFonts.manrope(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: isSelected ? AppColors.onPrimary : Colors.white,
+                            color: isSelected
+                                ? AppColors.onPrimary
+                                : Colors.white,
                           ),
                         ),
                         if (isSelected)
@@ -1058,6 +1072,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
           ),
         );
       case 'booked':
+      case 'recurring_booked':
       case 'passed_booked':
         final isPassed = slot.status == 'passed_booked';
         return GestureDetector(
