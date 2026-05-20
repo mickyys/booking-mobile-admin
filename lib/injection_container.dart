@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'package:auth0_flutter/auth0_flutter.dart';
 import 'package:reservaloya_admin/core/config/app_config.dart';
 import 'package:reservaloya_admin/core/network/network_info.dart';
+import 'package:reservaloya_admin/core/utils/auth_state_notifier.dart';
 import 'package:reservaloya_admin/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:reservaloya_admin/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:reservaloya_admin/features/auth/domain/repositories/auth_repository.dart';
@@ -26,6 +27,9 @@ import 'package:reservaloya_admin/features/dashboard/domain/usecases/create_inte
 import 'package:reservaloya_admin/features/dashboard/domain/repositories/dashboard_repository.dart';
 import 'package:reservaloya_admin/features/dashboard/domain/usecases/get_sport_center_settings_usecase.dart';
 import 'package:reservaloya_admin/features/dashboard/domain/usecases/update_sport_center_usecase.dart';
+import 'package:reservaloya_admin/features/dashboard/domain/usecases/update_court_slot_usecase.dart';
+import 'package:reservaloya_admin/features/dashboard/domain/usecases/update_court_schedule_usecase.dart';
+import 'package:reservaloya_admin/features/dashboard/presentation/bloc/schedule_bloc.dart';
 import 'package:reservaloya_admin/features/dashboard/presentation/bloc/settings_bloc.dart';
 import 'package:reservaloya_admin/features/recurring/data/datasources/recurring_remote_data_source.dart';
 import 'package:reservaloya_admin/features/recurring/data/datasources/recurring_remote_data_source_impl.dart';
@@ -74,6 +78,8 @@ Future<void> init() async {
     () => AuthRepositoryImpl(remoteDataSource: sl(), sharedPreferences: sl()),
   );
 
+  sl.registerLazySingleton<AuthStateNotifier>(() => AuthStateNotifier());
+
   final dio = Dio(
     BaseOptions(
       baseUrl: AppConfig.apiUrl,
@@ -84,6 +90,7 @@ Future<void> init() async {
   dio.interceptors.add(AuthInterceptor(
     sharedPreferences: sl(),
     authRepository: sl(),
+    authStateNotifier: sl(),
   ));
   dio.interceptors.add(LogInterceptor(
     requestBody: true,
@@ -102,6 +109,7 @@ Future<void> init() async {
     authRepository: sl(),
     registerDeviceUseCase: sl(),
     notificationManager: sl(),
+    authStateNotifier: sl(),
   ));
 
   sl.registerLazySingleton<DashboardRemoteDataSource>(
@@ -118,6 +126,13 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UpdateCourtUseCase(sl()));
   sl.registerLazySingleton(() => DeleteCourtUseCase(sl()));
   sl.registerLazySingleton(() => CreateInternalBookingUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateCourtSlotUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateCourtScheduleUseCase(sl()));
+  sl.registerFactory(() => ScheduleBloc(
+    getAdminCourtsUseCase: sl(),
+    updateCourtSlotUseCase: sl(),
+    updateCourtScheduleUseCase: sl(),
+  ));
   sl.registerFactory(() => DashboardBloc(
     getDashboardDataUseCase: sl(),
     cancelBookingUseCase: sl(),

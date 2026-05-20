@@ -404,7 +404,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildBookingCard(Booking booking) {
-    final isCancelled = booking.status.toLowerCase() == 'cancelled';
+    final status = booking.status.toLowerCase();
+    final isInactive = status == 'cancelled' || status == 'expired';
     
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -456,6 +457,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       _buildInfoIcon(Icons.access_time, '${booking.hour}:00 hrs'),
                     ],
                   ),
+                  if (booking.createdAt != null) ...[
+                    const SizedBox(height: 8),
+                    _buildInfoIcon(
+                      Icons.history,
+                      'Creado: ${DateFormat('dd/MM/yyyy HH:mm').format(booking.createdAt!)}',
+                    ),
+                  ],
                   const Divider(color: Colors.white10, height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -481,7 +489,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
             ),
-            if (!isCancelled)
+            if (!isInactive)
               Container(
                 width: double.infinity,
                 decoration: const BoxDecoration(
@@ -531,10 +539,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         color = Colors.orange;
         text = 'PENDIENTE';
         break;
+      case 'expired':
+        color = Colors.grey;
+        text = 'EXPIRADO';
+        break;
       default:
-        color = AppColors.onSurfaceVariant;
+        color = Colors.white24;
         text = status.toUpperCase();
-    }
+      }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -592,8 +604,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   String _formatDate(String dateStr) {
     try {
-      final date = DateFormat('yyyy-MM-dd').parse(dateStr);
-      return DateFormat('dd-MM-yyyy').format(date);
+      DateTime dateTime;
+      if (dateStr.contains('T') || dateStr.endsWith('Z')) {
+        dateTime = DateTime.parse(dateStr).toLocal();
+      } else {
+        dateTime = DateFormat('yyyy-MM-dd').parse(dateStr);
+      }
+      return DateFormat('dd-MM-yyyy').format(dateTime);
     } catch (e) {
       return dateStr;
     }
@@ -607,6 +624,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return 'Confirmado';
       case 'cancelled':
         return 'Cancelado';
+      case 'expired':
+        return 'Expirado';
       default:
         return status;
     }

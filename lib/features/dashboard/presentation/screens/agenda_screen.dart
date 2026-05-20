@@ -868,7 +868,10 @@ class _AgendaScreenState extends State<AgendaScreen> {
     final allSlots = <String>{};
     for (var schedule in schedules) {
       for (var slot in schedule.slots) {
-        allSlots.add('${slot.hour}:${slot.minutes}');
+        // Use padded format for consistent sorting (e.g., "09:00" instead of "9:0")
+        final h = slot.hour.toString().padLeft(2, '0');
+        final m = slot.minutes.toString().padLeft(2, '0');
+        allSlots.add('$h:$m');
       }
     }
     final sortedSlotKeys = allSlots.toList()..sort();

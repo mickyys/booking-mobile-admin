@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/usecases/usecase.dart';
+import '../../../../core/utils/auth_state_notifier.dart';
 import '../../../notification/domain/usecases/register_device_usecase.dart';
 import '../../../notification/presentation/notification_manager.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -17,6 +18,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository authRepository;
   final RegisterDeviceUseCase registerDeviceUseCase;
   final NotificationManager notificationManager;
+  final AuthStateNotifier authStateNotifier;
 
   AuthBloc({
     required this.loginUseCase,
@@ -25,12 +27,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.authRepository,
     required this.registerDeviceUseCase,
     required this.notificationManager,
+    required this.authStateNotifier,
   }) : super(AuthInitial()) {
     on<AppStarted>(_onAppStarted);
     on<LoginRequested>(_onLoginRequested);
     on<SocialLoginRequested>(_onSocialLoginRequested);
     on<RefreshTokenRequested>(_onRefreshTokenRequested);
     on<LogoutRequested>(_onLogoutRequested);
+    on<SessionExpired>(_onSessionExpired);
   }
 
   Future<void> _onAppStarted(AppStarted event, Emitter<AuthState> emit) async {
@@ -40,6 +44,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final hasToken = await authRepository.hasToken();
     if (!hasToken) {
       debugPrint('AUTH BLOC: No saved token found');
+      authStateNotifier.setUnauthenticated();
       emit(AuthUnauthenticated());
       return;
     }
@@ -48,10 +53,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     result.fold(
       (failure) {
         debugPrint('AUTH BLOC: Token refresh failed - ${failure.message}');
+        authStateNotifier.setUnauthenticated();
         emit(AuthUnauthenticated());
       },
       (user) {
         debugPrint('AUTH BLOC: Token refreshed successfully - User: ${user.id}');
+        authStateNotifier.setAuthenticated();
         emit(AuthAuthenticated(user: user));
         _registerDeviceForNotifications();
       },
@@ -70,6 +77,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       },
       (user) {
         debugPrint('AUTH BLOC: Login success - User: ${user.id}');
+        authStateNotifier.setAuthenticated();
         emit(AuthAuthenticated(user: user));
         
         _registerDeviceForNotifications();
@@ -89,6 +97,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       },
       (user) {
         debugPrint('AUTH BLOC: Social login success - User: ${user.id}');
+        authStateNotifier.setAuthenticated();
         emit(AuthAuthenticated(user: user));
         
         _registerDeviceForNotifications();
@@ -104,10 +113,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     result.fold(
       (failure) {
         debugPrint('AUTH BLOC: Token refresh failed - ${failure.message}');
+        authStateNotifier.setUnauthenticated();
         emit(AuthUnauthenticated());
       },
       (user) {
         debugPrint('AUTH BLOC: Token refreshed - User: ${user.id}');
+        authStateNotifier.setAuthenticated();
         emit(AuthAuthenticated(user: user));
       },
     );
@@ -140,6 +151,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _onLogoutRequested(LogoutRequested event, Emitter<AuthState> emit) async {
     debugPrint('AUTH BLOC: Logout requested');
     await authRepository.logout();
+    authStateNotifier.setUnauthenticated();
+    emit(AuthUnauthenticated());
+  }
+
+  Future<void> _onSessionExpired(SessionExpired event, Emitter<AuthState> emit) async {
+    debugPrint('AUTH BLOC: Session expired');
+    await authRepository.logout();
+    authStateNotifier.setUnauthenticated();
     emit(AuthUnauthenticated());
   }
 }

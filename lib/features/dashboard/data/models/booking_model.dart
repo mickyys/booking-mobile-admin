@@ -13,6 +13,7 @@ class BookingModel extends Booking {
     required super.status,
     required super.paymentMethod,
     required super.price,
+    super.createdAt,
   });
 
   factory BookingModel.fromJson(Map<String, dynamic> json) {
@@ -28,6 +29,7 @@ class BookingModel extends Booking {
       status: json['status'] ?? '',
       paymentMethod: json['payment_method'] ?? '',
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']).toLocal() : null,
     );
   }
 }

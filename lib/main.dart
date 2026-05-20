@@ -10,6 +10,7 @@ import 'core/firebase_options.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
 import 'features/auth/presentation/screens/splash_screen.dart';
+import 'core/utils/auth_state_notifier.dart';
 import 'features/dashboard/presentation/bloc/dashboard_bloc.dart';
 import 'features/dashboard/presentation/bloc/agenda_bloc.dart';
 import 'features/dashboard/presentation/screens/dashboard_screen.dart';
@@ -43,7 +44,25 @@ void main() async {
 }
 
 final _router = GoRouter(
+  refreshListenable: di.sl<AuthStateNotifier>(),
   initialLocation: '/splash',
+  redirect: (context, state) {
+    final authStateNotifier = di.sl<AuthStateNotifier>();
+    final isAuthenticated = authStateNotifier.isAuthenticated;
+    final location = state.matchedLocation;
+
+    if (location == '/splash') return null;
+
+    if (!isAuthenticated && location != '/login') {
+      return '/login';
+    }
+
+    if (isAuthenticated && location == '/login') {
+      return '/dashboard';
+    }
+
+    return null;
+  },
   routes: [
     GoRoute(
       path: '/splash',

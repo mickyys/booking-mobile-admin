@@ -114,14 +114,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<void> logout() async {
-    try {
-      debugPrint('AUTH0: Attempting logout');
-      await auth0.webAuthentication(scheme: 'reservaloya').logout();
-      debugPrint('AUTH0: Logout success');
-    } catch (e, stack) {
-      debugPrint('AUTH0: Logout failed - Error: $e');
-      debugPrint('AUTH0: Stack trace: $stack');
-      throw Exception('Logout failed: $e');
-    }
+    debugPrint('AUTH0: Logout requested');
   }
 }

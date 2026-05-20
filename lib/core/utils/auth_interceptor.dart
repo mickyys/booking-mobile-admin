@@ -1,15 +1,18 @@
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
+import 'auth_state_notifier.dart';
 
 class AuthInterceptor extends Interceptor {
   final SharedPreferences sharedPreferences;
   final AuthRepository authRepository;
+  final AuthStateNotifier authStateNotifier;
   bool _isRefreshing = false;
 
   AuthInterceptor({
     required this.sharedPreferences,
     required this.authRepository,
+    required this.authStateNotifier,
   });
 
   @override
@@ -59,8 +62,10 @@ class AuthInterceptor extends Interceptor {
       _isRefreshing = false;
 
       result.fold(
-        (_) {
-          print('❌ DIO: Token refresh failed');
+        (_) async {
+          print('❌ DIO: Token refresh failed, clearing session');
+          await sharedPreferences.remove('jwt_token');
+          authStateNotifier.setUnauthenticated();
           handler.next(err);
         },
         (user) async {

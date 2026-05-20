@@ -12,7 +12,7 @@ cd "$SCRIPT_DIR"
 BUILD_TYPE="release"
 CLEAN=""
 
-VERSION="1.0.3"
+VERSION="1.0.4"
 
 # Parse arguments
 for arg in "$@"; do

@@ -12,6 +12,7 @@ class Booking extends Equatable {
   final String status;
   final String paymentMethod;
   final double price;
+  final DateTime? createdAt;
 
   const Booking({
     required this.id,
@@ -25,6 +26,7 @@ class Booking extends Equatable {
     required this.status,
     required this.paymentMethod,
     required this.price,
+    this.createdAt,
   });
 
   @override
@@ -40,6 +42,7 @@ class Booking extends Equatable {
         status,
         paymentMethod,
         price,
+        createdAt,
       ];
 }
 
