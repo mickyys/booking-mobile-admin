@@ -5,8 +5,15 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:reservaloya_admin/core/theme/app_colors.dart';
+import 'package:reservaloya_admin/core/theme/app_spacing.dart';
+import 'package:reservaloya_admin/core/theme/app_radius.dart';
 import 'package:reservaloya_admin/core/widgets/app_navigation_bar.dart';
 import 'package:reservaloya_admin/core/widgets/app_drawer.dart';
+import 'package:reservaloya_admin/core/widgets/modal_badge.dart';
+import 'package:reservaloya_admin/core/widgets/modal_detail_row.dart';
+import 'package:reservaloya_admin/core/widgets/modal_section.dart';
+import 'package:reservaloya_admin/core/widgets/modal_text_field.dart';
+import 'package:reservaloya_admin/core/widgets/segmented_selector.dart';
 import '../bloc/agenda_bloc.dart';
 import '../bloc/agenda_event.dart';
 import '../bloc/agenda_state.dart';
@@ -77,55 +84,76 @@ class _AgendaScreenState extends State<AgendaScreen> {
       text: slot.price.toInt().toString(),
     );
     bool isBlocked = false;
+    bool isCreating = false;
+    String? nameError;
+    String? priceError;
+
+    final hourStr = slot.hour.toString().padLeft(2, '0');
+    final minStr = slot.minutes.toString().padLeft(2, '0');
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) {
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) {
           return AlertDialog(
             backgroundColor: AppColors.surfaceHigh,
             insetPadding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 24,
+              horizontal: AppSpacing.sm,
+              vertical: AppSpacing.lg,
             ),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppRadius.xl),
             ),
-            title: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            title: Column(
               children: [
-                Expanded(
-                  child: Text(
-                    isBlocked ? 'Bloquear Horario' : 'Reserva Manual',
-                    style: GoogleFonts.manrope(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                SegmentedSelector<bool>(
+                  options: const [
+                    SegmentedOption(
+                      label: 'Reservar',
+                      value: false,
+                      color: AppColors.primary,
+                      foregroundColor: AppColors.onPrimary,
+                      icon: Icons.edit_calendar_outlined,
                     ),
-                  ),
-                ),
-                Switch(
+                    SegmentedOption(
+                      label: 'Bloquear',
+                      value: true,
+                      color: AppColors.error,
+                      foregroundColor: Colors.white,
+                      icon: Icons.block,
+                    ),
+                  ],
                   value: isBlocked,
-                  activeColor: AppColors.primary,
                   onChanged: (value) {
-                    setState(() {
+                    setDialogState(() {
                       isBlocked = value;
+                      nameError = null;
+                      priceError = null;
                     });
                   },
                 ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  isBlocked ? 'Bloquear Horario' : 'Reserva Manual',
+                  style: GoogleFonts.manrope(
+                    color: AppColors.onSurface,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
-            content: SizedBox(
-              width: MediaQuery.of(context).size.width * 0.9,
+            content: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.md),
                     ),
                     child: Row(
                       children: [
@@ -134,7 +162,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
                           color: AppColors.primary,
                           size: 20,
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,15 +170,16 @@ class _AgendaScreenState extends State<AgendaScreen> {
                               Text(
                                 courtName,
                                 style: GoogleFonts.inter(
-                                  color: Colors.white,
+                                  color: AppColors.onSurface,
                                   fontWeight: FontWeight.bold,
+                                  fontSize: 14,
                                 ),
                               ),
                               Text(
-                                'Hora: ${slot.hour}:00',
+                                '$hourStr:$minStr',
                                 style: GoogleFonts.inter(
                                   color: AppColors.primary,
-                                  fontSize: 12,
+                                  fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -160,97 +189,60 @@ class _AgendaScreenState extends State<AgendaScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
                   if (!isBlocked) ...[
-                    TextField(
+                    const SizedBox(height: AppSpacing.lg),
+                    ModalTextField(
+                      label: 'Nombre Cliente',
+                      icon: Icons.person_outline,
                       controller: nameController,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        labelText: 'Nombre Cliente',
-                        labelStyle: const TextStyle(
-                          color: AppColors.onSurfaceVariant,
-                        ),
-                        prefixIcon: const Icon(
-                          Icons.person_outline,
-                          color: AppColors.onSurfaceVariant,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.white10),
-                        ),
-                      ),
+                      required: true,
+                      errorText: nameError,
                     ),
-                    const SizedBox(height: 16),
-                    TextField(
+                    const SizedBox(height: AppSpacing.base),
+                    ModalTextField(
+                      label: 'Teléfono',
+                      icon: Icons.phone_outlined,
                       controller: phoneController,
                       keyboardType: TextInputType.phone,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        labelText: 'Teléfono',
-                        labelStyle: const TextStyle(
-                          color: AppColors.onSurfaceVariant,
-                        ),
-                        prefixIcon: const Icon(
-                          Icons.phone_outlined,
-                          color: AppColors.onSurfaceVariant,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.white10),
-                        ),
-                      ),
                     ),
-                    const SizedBox(height: 16),
-                    TextField(
+                    const SizedBox(height: AppSpacing.base),
+                    ModalTextField(
+                      label: 'Precio',
+                      icon: Icons.attach_money,
                       controller: priceController,
                       keyboardType: TextInputType.number,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        labelText: 'Precio',
-                        labelStyle: const TextStyle(
-                          color: AppColors.onSurfaceVariant,
-                        ),
-                        prefixIcon: const Icon(
-                          Icons.attach_money,
-                          color: AppColors.onSurfaceVariant,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.white10),
-                        ),
-                      ),
+                      required: true,
+                      errorText: priceError,
                     ),
                   ] else ...[
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 20),
-                        child: Column(
-                          children: [
-                            const Icon(
-                              Icons.block,
-                              color: AppColors.error,
-                              size: 48,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Este horario quedará marcado como bloqueado y no estará disponible para reservas externas.',
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.inter(
-                                color: Colors.white70,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
+                    const SizedBox(height: AppSpacing.lg),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      decoration: BoxDecoration(
+                        color: AppColors.error.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        border: Border.all(
+                          color: AppColors.error.withOpacity(0.2),
                         ),
+                      ),
+                      child: Column(
+                        children: [
+                          const Icon(
+                            Icons.block,
+                            color: AppColors.error,
+                            size: 40,
+                          ),
+                          const SizedBox(height: AppSpacing.base),
+                          Text(
+                            'Este horario quedará marcado como bloqueado\ny no estará disponible para reservas externas.',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(
+                              color: AppColors.onSurfaceVariant,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -260,13 +252,17 @@ class _AgendaScreenState extends State<AgendaScreen> {
             actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: isCreating ? null : () => Navigator.pop(dialogContext),
                 child: Text(
                   'Cancelar',
-                  style: GoogleFonts.inter(color: AppColors.onSurfaceVariant),
+                  style: GoogleFonts.inter(
+                    color: isCreating
+                        ? AppColors.onSurfaceVariant.withOpacity(0.4)
+                        : AppColors.onSurfaceVariant,
+                  ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: isBlocked
@@ -276,45 +272,80 @@ class _AgendaScreenState extends State<AgendaScreen> {
                       ? Colors.white
                       : AppColors.onPrimary,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
                   ),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
                     vertical: 12,
                   ),
                 ),
-                onPressed: () {
-                  final now = DateTime.now().toUtc();
-                  final dateStr = DateFormat(
-                    'yyyy-MM-dd',
-                  ).format(_selectedDate);
-                  final hourStr = now.hour.toString().padLeft(2, '0');
-                  final minStr = now.minute.toString().padLeft(2, '0');
-                  final Map<String, dynamic> bookingData = {
-                    'court_id': courtId,
-                    'sport_center_id': _selectedSportCenterId,
-                    'date': '${dateStr}T${hourStr}:${minStr}:00.000+00:00',
-                    'hour': slot.hour,
-                    'minutes': slot.minutes,
-                    'price': isBlocked
-                        ? 0.0
-                        : (double.tryParse(priceController.text) ?? slot.price),
-                    'payment_method': 'internal',
-                  };
+                onPressed: isCreating
+                    ? null
+                    : () {
+                        bool valid = true;
+                        setDialogState(() {
+                          nameError = null;
+                          priceError = null;
+                        });
+                        if (!isBlocked) {
+                          if (nameController.text.trim().isEmpty) {
+                            setDialogState(() {
+                              nameError = 'Nombre es requerido';
+                            });
+                            valid = false;
+                          }
+                          final price =
+                              double.tryParse(priceController.text);
+                          if (price == null || price <= 0) {
+                            setDialogState(() {
+                              priceError = 'Precio debe ser mayor a 0';
+                            });
+                            valid = false;
+                          }
+                        }
+                        if (!valid) return;
 
-                  if (isBlocked) {
-                    bookingData['customer_name'] = 'BLOQUEADO';
-                  } else {
-                    bookingData['customer_name'] = nameController.text;
-                    bookingData['customer_phone'] = phoneController.text;
-                  }
+                        setDialogState(() => isCreating = true);
 
-                  context.read<AgendaBloc>().add(
-                    CreateInternalBookingEvent(bookingData: bookingData),
-                  );
-                  Navigator.pop(context);
-                },
-                child: Text(isBlocked ? 'Bloquear' : 'Reservar'),
+                        final dateStr =
+                            DateFormat('yyyy-MM-dd').format(_selectedDate);
+                        final Map<String, dynamic> bookingData = {
+                          'court_id': courtId,
+                          'sport_center_id': _selectedSportCenterId,
+                          'date': '${dateStr}T12:00:00.000Z',
+                          'hour': slot.hour,
+                          'minutes': slot.minutes,
+                          'price': isBlocked
+                              ? 0.0
+                              : (double.tryParse(priceController.text) ??
+                                  slot.price),
+                          'payment_method': 'internal',
+                        };
+
+                        if (isBlocked) {
+                          bookingData['customer_name'] = 'BLOQUEADO';
+                        } else {
+                          bookingData['customer_name'] = nameController.text;
+                          bookingData['customer_phone'] =
+                              phoneController.text;
+                        }
+
+                        context.read<AgendaBloc>().add(
+                          CreateInternalBookingEvent(
+                              bookingData: bookingData),
+                        );
+                        Navigator.pop(dialogContext);
+                      },
+                child: isCreating
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.onPrimary,
+                        ),
+                      )
+                    : Text(isBlocked ? 'Bloquear' : 'Reservar'),
               ),
             ],
           );
@@ -323,7 +354,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
     );
   }
 
-  void _showBookingDetailsDialog(TimeSlot slot) {
+  void _showBookingDetailsDialog(TimeSlot slot, String courtId, String courtName) {
     final booking = slot.booking;
     if (booking == null) return;
 
@@ -336,95 +367,388 @@ class _AgendaScreenState extends State<AgendaScreen> {
               : _availableCenters.first.sportCenter.name)
         : '';
 
+    final isRecurring = slot.isRecurringWeekly;
+    final isCancelledRecurring = slot.status == 'recurring_cancelled';
+    final isActiveRecurring = isRecurring && !isCancelledRecurring;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.surfaceHigh,
-        title: Text(
-          'Detalle de Reserva',
-          style: GoogleFonts.manrope(color: Colors.white),
+        insetPadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.lg,
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+        ),
+        title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            _detailRow('Cliente:', _capitalizeName(booking.customerName)),
-            _detailRow('Teléfono:', phone.isEmpty ? 'No informado' : phone),
-            _detailRow('Código:', booking.bookingCode),
-            _detailRow(
-              'Método:',
-              _getPaymentMethodLabel(booking.paymentMethod),
+            if (isRecurring)
+              ModalBadge(
+                label:
+                    isCancelledRecurring ? 'Cancelada esta fecha' : 'Recurrente semanal',
+                color: isCancelledRecurring
+                    ? AppColors.error
+                    : AppColors.recurringWeekly,
+                icon: isCancelledRecurring ? Icons.event_busy : Icons.repeat,
+              ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'Detalle de Reserva',
+              style: GoogleFonts.manrope(
+                color: AppColors.onSurface,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            _detailRow('Precio:', _formatPrice(booking.price)),
-            if (formattedPhone != null) ...[
-              const SizedBox(height: 16),
-              Row(
+          ],
+        ),
+          content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceHighest.withOpacity(0.4),
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                    ),
+                    child: Column(
+                      children: [
+                        ModalDetailRow(
+                          icon: Icons.sports,
+                          label: 'Cancha',
+                          value: courtName,
                         ),
-                      ),
-                      onPressed: () => _openWhatsApp(
-                        formattedPhone,
-                        booking.customerName,
-                        _selectedDate,
-                        slot.hour,
-                        slot.minutes,
-                        sportCenterName,
-                      ),
-                      child: FaIcon(FontAwesomeIcons.whatsapp, size: 22),
+                        ModalDetailRow(
+                          icon: Icons.calendar_today,
+                          label: 'Fecha',
+                          value: DateFormat('dd/MM/yyyy').format(_selectedDate),
+                        ),
+                        ModalDetailRow(
+                          icon: Icons.access_time,
+                          label: 'Hora',
+                          value:
+                              '${slot.hour.toString().padLeft(2, '0')}:${slot.minutes.toString().padLeft(2, '0')}',
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: ElevatedButton(
+                  const SizedBox(height: AppSpacing.lg),
+                  ModalSection(
+                    title: 'CLIENTE',
+                    icon: Icons.person_outline,
+                    child: Container(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceHighest.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                      ),
+                      child: Column(
+                        children: [
+                          ModalDetailRow(
+                            label: 'Nombre',
+                            value: _capitalizeName(booking.customerName),
+                          ),
+                          ModalDetailRow(
+                            label: 'Teléfono',
+                            value:
+                                phone.isEmpty ? 'No informado' : phone,
+                          ),
+                          ModalDetailRow(
+                            label: 'Código',
+                            value: booking.bookingCode.isEmpty
+                                ? 'Recurrente'
+                                : booking.bookingCode,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  ModalSection(
+                    title: 'PAGO',
+                    icon: Icons.payments_outlined,
+                    child: Container(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceHighest.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                      ),
+                      child: Column(
+                        children: [
+                          ModalDetailRow(
+                            label: 'Método',
+                            value:
+                                _getPaymentMethodLabel(booking.paymentMethod),
+                          ),
+                          ModalDetailRow(
+                            label: 'Precio',
+                            value: _formatPrice(booking.price),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (formattedPhone != null) ...[
+                    const SizedBox(height: AppSpacing.lg),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.whatsapp,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(AppRadius.md),
+                              ),
+                            ),
+                            onPressed: () => _openWhatsApp(
+                              formattedPhone,
+                              booking.customerName,
+                              _selectedDate,
+                              slot.hour,
+                              slot.minutes,
+                              sportCenterName,
+                            ),
+                            icon: const FaIcon(FontAwesomeIcons.whatsapp,
+                                size: 18),
+                            label: const Text('WhatsApp',
+                                style: TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: AppColors.onPrimary,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(AppRadius.md),
+                              ),
+                            ),
+                            onPressed: () => _makePhoneCall(formattedPhone),
+                            icon: const FaIcon(FontAwesomeIcons.phone, size: 18),
+                            label: const Text('Llamar',
+                                style: TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  if (isActiveRecurring) ...[
+                    const SizedBox(height: AppSpacing.lg),
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: AppColors.recurringWeekly.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        border: Border.all(
+                          color: AppColors.recurringWeekly.withOpacity(0.2),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'Cancelación de recurrencia',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.onSurfaceVariant,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.recurringWeekly,
+                              foregroundColor: Colors.black,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.md),
+                              ),
+                            ),
+                            onPressed: () {
+                              Navigator.pop(dialogContext);
+                              _showCancelSingleDateConfirmation(slot);
+                            },
+                            icon: const Icon(Icons.event_busy, size: 18),
+                            label: Text(
+                              'Cancelar solo esta fecha',
+                              style: GoogleFonts.inter(
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.error,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.md),
+                              ),
+                            ),
+                            onPressed: () {
+                              final recurringId =
+                                  slot.recurringReservationId;
+                              if (recurringId != null) {
+                                context.read<AgendaBloc>().add(
+                                  CancelRecurringSeriesEvent(
+                                    recurringReservationId: recurringId,
+                                    sportCenterId: _selectedSportCenterId!,
+                                    date: DateFormat('yyyy-MM-dd')
+                                        .format(_selectedDate),
+                                  ),
+                                );
+                              }
+                              Navigator.pop(dialogContext);
+                            },
+                            icon: const Icon(Icons.delete_forever, size: 18),
+                            label: Text(
+                              'Cancelar toda la serie',
+                              style: GoogleFonts.inter(
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  if (!isActiveRecurring && !isCancelledRecurring) ...[
+                    const SizedBox(height: AppSpacing.lg),
+                    ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: AppColors.error,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadius.md),
                         ),
                       ),
-                      onPressed: () => _makePhoneCall(formattedPhone),
-                      child: FaIcon(
-                        FontAwesomeIcons.phone,
-                        color: Colors.white,
-                        size: 22,
+                      onPressed: () {
+                        context.read<AgendaBloc>().add(
+                          CancelBookingEvent(
+                            bookingId: booking.id,
+                            sportCenterId: _selectedSportCenterId!,
+                            date: DateFormat('yyyy-MM-dd')
+                                .format(_selectedDate),
+                          ),
+                        );
+                        Navigator.pop(dialogContext);
+                      },
+                      icon: const Icon(Icons.cancel_outlined, size: 18),
+                      label: Text(
+                        'Cancelar reserva',
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          fontSize: 13,
+                        ),
                       ),
+                    ),
+                  ],
+                  const SizedBox(height: AppSpacing.lg),
+                  OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.onSurfaceVariant,
+                      side: BorderSide(
+                        color: AppColors.onSurfaceVariant.withOpacity(0.3),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                      ),
+                    ),
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: Text(
+                      'Cerrar',
+                      style: GoogleFonts.inter(fontWeight: FontWeight.w600),
                     ),
                   ),
                 ],
               ),
-            ],
-          ],
+            ),
+      ),
+    );
+  }
+
+  void _showCancelSingleDateConfirmation(TimeSlot slot) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surfaceHigh,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+        ),
+        title: Text(
+          'Confirmar cancelación',
+          style: GoogleFonts.manrope(
+            color: AppColors.onSurface,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          'Se anulará solo esta fecha de la reserva semanal.\nLa serie seguirá activa para las próximas semanas.',
+          style: GoogleFonts.inter(
+            color: AppColors.onSurfaceVariant,
+            fontSize: 14,
+          ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cerrar'),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Mantener',
+              style: GoogleFonts.inter(color: AppColors.onSurfaceVariant),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: AppColors.onPrimary,
+              backgroundColor: AppColors.recurringWeekly,
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
             ),
             onPressed: () {
-              context.read<AgendaBloc>().add(
-                CancelBookingEvent(
-                  bookingId: booking.id,
-                  sportCenterId: _selectedSportCenterId!,
-                  date: DateFormat('yyyy-MM-dd').format(_selectedDate),
-                ),
-              );
-              Navigator.pop(context);
+              final dateStr =
+                  DateFormat('yyyy-MM-dd').format(_selectedDate);
+              final recurringId = slot.recurringReservationId;
+              if (recurringId != null) {
+                context.read<AgendaBloc>().add(
+                  CancelRecurringDateEvent(
+                    recurringReservationId: recurringId,
+                    sportCenterId: _selectedSportCenterId!,
+                    date: dateStr,
+                  ),
+                );
+              }
+              Navigator.pop(ctx);
             },
-            child: const Text('Cancelar Reserva'),
+            child: Text(
+              'Sí, anular fecha',
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
+            ),
           ),
         ],
       ),
@@ -494,12 +818,8 @@ class _AgendaScreenState extends State<AgendaScreen> {
   }
 
   String _formatPrice(double price) {
-    final formatter = NumberFormat.currency(
-      locale: 'es_CL',
-      symbol: '\$',
-      decimalDigits: 0,
-    );
-    return formatter.format(price);
+    final formatter = NumberFormat('#,###', 'es_CL');
+    return '\$${formatter.format(price)}';
   }
 
   String _getPaymentMethodLabel(String method) {
@@ -522,31 +842,6 @@ class _AgendaScreenState extends State<AgendaScreen> {
       default:
         return method;
     }
-  }
-
-  Widget _detailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.onSurfaceVariant,
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(color: Colors.white, fontSize: 13),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -1076,19 +1371,27 @@ class _AgendaScreenState extends State<AgendaScreen> {
         );
       case 'booked':
       case 'recurring_booked':
+      case 'recurring_cancelled':
       case 'passed_booked':
         final isPassed = slot.status == 'passed_booked';
+        final isCancelled = slot.status == 'recurring_cancelled';
         return GestureDetector(
-          onTap: () => _showBookingDetailsDialog(slot),
+          onTap: () => _showBookingDetailsDialog(slot, courtId, courtName),
           child: Container(
             height: 90,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.surfaceHigh,
+              color: isCancelled
+                  ? AppColors.error.withOpacity(0.15)
+                  : AppColors.surfaceHigh,
               borderRadius: BorderRadius.circular(12),
               border: Border(
                 left: BorderSide(
-                  color: isPassed ? Colors.white : AppColors.primary,
+                  color: isCancelled
+                      ? AppColors.error
+                      : isPassed
+                          ? Colors.white
+                          : AppColors.primary,
                   width: 4,
                 ),
               ),
@@ -1098,7 +1401,11 @@ class _AgendaScreenState extends State<AgendaScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  isPassed ? 'SESIÓN ACTUAL' : 'RESERVADO',
+                  isCancelled
+                      ? 'CANCELADO'
+                      : isPassed
+                          ? 'SESIÓN ACTUAL'
+                          : 'RESERVADO',
                   style: GoogleFonts.inter(
                     fontSize: 9,
                     fontWeight: FontWeight.w600,

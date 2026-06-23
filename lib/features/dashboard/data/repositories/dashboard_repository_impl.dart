@@ -94,6 +94,16 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
+  Future<Either<Failure, Unit>> cancelRecurringDate(String recurringReservationId, String date) async {
+    try {
+      await remoteDataSource.cancelRecurringDate(recurringReservationId, date);
+      return const Right(unit);
+    } catch (e) {
+      return const Left(ServerFailure('Error al cancelar la fecha recurrente.'));
+    }
+  }
+
+  @override
   Future<Either<Failure, Unit>> updateCourtSlot(String courtId, TimeSlot slot) async {
     try {
       await remoteDataSource.updateCourtSlot(courtId, {

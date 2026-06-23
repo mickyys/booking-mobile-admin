@@ -10,10 +10,10 @@ import '../../../../core/widgets/tonal_card.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../../notification/presentation/notification_manager.dart';
+import '../../domain/entities/booking.dart';
 import '../bloc/dashboard_bloc.dart';
 import '../bloc/dashboard_event.dart';
 import '../bloc/dashboard_state.dart';
-import '../../domain/entities/booking.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -38,28 +38,180 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   void _checkNotificationNavigation() {
     final notificationManager = context.read<NotificationManager>();
-    final bookingId = notificationManager.getInitialBookingId();
+    final data = notificationManager.getInitialBookingData();
     
-    if (bookingId != null) {
+    if (data != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showBookingDetail(bookingId);
+        _showBookingDetail(data);
       });
     }
   }
 
-  void _showBookingDetail(String bookingId) {
+  void _showBookingDetail(Map<String, dynamic> data) {
+    final customerName = (data['customer_name'] ?? '').toString();
+    final customerPhone = (data['customer_phone'] ?? '').toString();
+    final customerEmail = (data['customer_email'] ?? '').toString();
+    final bookingCode = (data['booking_code'] ?? '').toString();
+    final courtName = (data['court_name'] ?? data['center_name'] ?? '').toString();
+    final date = (data['date'] ?? '').toString();
+    final hourStr = data['hour'] != null ? '${data['hour']}:00 hrs' : '';
+    final status = (data['status'] ?? '').toString();
+    final paymentMethod = (data['payment_method'] ?? '').toString();
+    final price = double.tryParse((data['price'] ?? '').toString()) ?? 0.0;
+
+    String? createdAtStr;
+    if (data['created_at'] != null) {
+      try {
+        createdAtStr = DateFormat('dd/MM/yyyy HH:mm')
+            .format(DateTime.parse(data['created_at'].toString()).toLocal());
+      } catch (_) {}
+    }
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Detalle de Reserva'),
-        content: Text('Reserva ID: $bookingId'),
+        backgroundColor: AppColors.surfaceHigh,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Detalle de Reserva',
+          style: GoogleFonts.manrope(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (customerName.isNotEmpty) ...[
+                _detailRow('Cliente:', customerName.toUpperCase()),
+                const SizedBox(height: 6),
+              ],
+              _detailRow(
+                'Teléfono:',
+                customerPhone.isEmpty ? 'No informado' : customerPhone,
+              ),
+              const SizedBox(height: 6),
+              _detailRow(
+                'Email:',
+                customerEmail.isEmpty ? 'No informado' : customerEmail,
+              ),
+              const SizedBox(height: 6),
+              if (bookingCode.isNotEmpty) ...[
+                _detailRow('Código:', bookingCode),
+                const SizedBox(height: 6),
+              ],
+              if (courtName.isNotEmpty) ...[
+                _detailRow('Cancha:', courtName),
+                const SizedBox(height: 6),
+              ],
+              if (date.isNotEmpty) ...[
+                _detailRow('Fecha:', _formatDate(date)),
+                const SizedBox(height: 6),
+              ],
+              if (hourStr.isNotEmpty) ...[
+                _detailRow('Hora:', hourStr),
+                const SizedBox(height: 12),
+              ],
+              if (status.isNotEmpty) ...[
+                Row(
+                  children: [
+                    Text(
+                      'Estado:',
+                      style: GoogleFonts.inter(
+                        color: AppColors.onSurfaceVariant,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    _buildStatusBadge(status),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
+              if (paymentMethod.isNotEmpty) ...[
+                Row(
+                  children: [
+                    Text(
+                      'Método:',
+                      style: GoogleFonts.inter(
+                        color: AppColors.onSurfaceVariant,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    _buildPaymentBadge(paymentMethod),
+                  ],
+                ),
+                const SizedBox(height: 12),
+              ],
+              if (price > 0) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'TOTAL',
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        color: AppColors.onSurfaceVariant,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      formatCLP(price),
+                      style: GoogleFonts.manrope(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              if (createdAtStr != null) ...[
+                const Divider(color: Colors.white10, height: 24),
+                _detailRow('Creado:', createdAtStr),
+              ],
+            ],
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cerrar'),
+            child: Text(
+              'Cerrar',
+              style: GoogleFonts.inter(color: AppColors.onSurfaceVariant),
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _detailRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            color: AppColors.onSurfaceVariant,
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            value,
+            style: GoogleFonts.inter(color: Colors.white, fontSize: 13),
+          ),
+        ),
+      ],
     );
   }
 

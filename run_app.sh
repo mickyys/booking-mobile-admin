@@ -3,7 +3,7 @@
 # Configuration Variables
 # 10.0.2.2 is the localhost IP for Android Emulator
 # API_URL=${1:-"http://10.0.2.2:8080/api"}
-API_URL="https://api.reservaloya.cl/api"
+API_URL="https://api.dev.reservaloya.cl/api"
 AUTH0_DOMAIN="auth.reservaloya.cl"
 AUTH0_CLIENT_ID="gSv4eupv6F0eRjctmIKrCNzK7Z535Xp9"
 AUTH0_AUDIENCE="https://dev-8obo6dl4.us.auth0.com/api/v2/"

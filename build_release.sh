@@ -12,7 +12,7 @@ cd "$SCRIPT_DIR"
 BUILD_TYPE="release"
 CLEAN=""
 
-VERSION="1.0.4"
+VERSION="1.0.7"
 
 # Parse arguments
 for arg in "$@"; do
@@ -32,7 +32,7 @@ for arg in "$@"; do
     esac
 done
 
-# Production variables
+# Dev environment variables
 API_URL="https://api.reservaloya.cl/api"
 AUTH0_DOMAIN="auth.reservaloya.cl"
 AUTH0_CLIENT_ID="gSv4eupv6F0eRjctmIKrCNzK7Z535Xp9"

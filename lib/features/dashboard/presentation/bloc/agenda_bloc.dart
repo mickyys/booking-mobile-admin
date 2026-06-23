@@ -8,7 +8,9 @@ import '../../domain/usecases/update_court_usecase.dart';
 import '../../domain/usecases/delete_court_usecase.dart';
 import '../../domain/usecases/create_internal_booking_usecase.dart';
 import '../../domain/usecases/cancel_booking_usecase.dart';
+import '../../domain/usecases/cancel_recurring_date_usecase.dart';
 import '../../../recurring/domain/usecases/create_recurring_reservation_usecase.dart';
+import '../../../recurring/domain/usecases/cancel_recurring_reservation_usecase.dart';
 import 'agenda_event.dart';
 import 'agenda_state.dart';
 
@@ -21,6 +23,8 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
   final CreateInternalBookingUseCase createInternalBookingUseCase;
   final CancelBookingUseCase cancelBookingUseCase;
   final CreateRecurringReservationUseCase createRecurringReservationUseCase;
+  final CancelRecurringReservationUseCase cancelRecurringReservationUseCase;
+  final CancelRecurringDateUseCase cancelRecurringDateUseCase;
 
   AgendaBloc({
     required this.getAgendaUseCase,
@@ -31,6 +35,8 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
     required this.createInternalBookingUseCase,
     required this.cancelBookingUseCase,
     required this.createRecurringReservationUseCase,
+    required this.cancelRecurringReservationUseCase,
+    required this.cancelRecurringDateUseCase,
   }) : super(AgendaInitial()) {
     on<LoadAdminCourts>(_onLoadAdminCourts);
     on<LoadAgendaData>(_onLoadAgendaData);
@@ -41,6 +47,8 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
     on<CreateInternalBookingEvent>(_onCreateInternalBooking);
     on<CancelBookingEvent>(_onCancelBooking);
     on<CreateRecurringReservationEvent>(_onCreateRecurringReservation);
+    on<CancelRecurringSeriesEvent>(_onCancelRecurringSeries);
+    on<CancelRecurringDateEvent>(_onCancelRecurringDate);
   }
 
   Future<void> _onLoadAdminCourts(LoadAdminCourts event, Emitter<AgendaState> emit) async {
@@ -201,5 +209,32 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
       print('❌ Recurring reservation error: $e');
       emit(AgendaError(message: e.toString()));
     }
+  }
+
+  Future<void> _onCancelRecurringSeries(CancelRecurringSeriesEvent event, Emitter<AgendaState> emit) async {
+    emit(AgendaLoading());
+    try {
+      await cancelRecurringReservationUseCase(event.recurringReservationId);
+      print('✅ Recurring series cancelled: ${event.recurringReservationId}');
+      emit(const CourtActionSuccess(message: 'Serie recurrente cancelada'));
+      add(LoadAgendaData(sportCenterId: event.sportCenterId, date: event.date));
+    } catch (e) {
+      print('❌ Cancel recurring series error: $e');
+      emit(AgendaError(message: e.toString()));
+    }
+  }
+
+  Future<void> _onCancelRecurringDate(CancelRecurringDateEvent event, Emitter<AgendaState> emit) async {
+    emit(AgendaLoading());
+    final result = await cancelRecurringDateUseCase(
+      CancelRecurringDateParams(recurringReservationId: event.recurringReservationId, date: event.date),
+    );
+    result.fold(
+      (failure) => emit(AgendaError(message: failure.message)),
+      (_) {
+        emit(const CourtActionSuccess(message: 'Fecha cancelada de la serie recurrente'));
+        add(LoadAgendaData(sportCenterId: event.sportCenterId, date: event.date));
+      },
+    );
   }
 }

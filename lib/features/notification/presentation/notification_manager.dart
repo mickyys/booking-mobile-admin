@@ -29,7 +29,7 @@ class NotificationManager {
       StreamController<RemoteMessage>.broadcast();
   Stream<RemoteMessage> get messageStream => _messageController.stream;
 
-  String? _initialMessageBookingId;
+  Map<String, dynamic>? _initialBookingData;
 
   // Canal para reservas con sonido personalizado
   // NOTA: cambiar el channelId si ya existía uno previo sin sonido (Android no actualiza canales existentes)
@@ -195,7 +195,7 @@ class NotificationManager {
     
     if (bookingId != null) {
       print('[Navigation] Navigating to booking: $bookingId');
-      _initialMessageBookingId = bookingId.toString();
+      _initialBookingData = Map<String, dynamic>.from(data);
     }
   }
 
@@ -224,10 +224,10 @@ class NotificationManager {
     }
   }
 
-  String? getInitialBookingId() {
-    final bookingId = _initialMessageBookingId;
-    _initialMessageBookingId = null;
-    return bookingId;
+  Map<String, dynamic>? getInitialBookingData() {
+    final data = _initialBookingData;
+    _initialBookingData = null;
+    return data;
   }
 
   void dispose() {

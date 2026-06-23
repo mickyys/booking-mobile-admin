@@ -100,3 +100,33 @@ class CreateRecurringReservationEvent extends AgendaEvent {
   @override
   List<Object> get props => [bookingData];
 }
+
+class CancelRecurringSeriesEvent extends AgendaEvent {
+  final String recurringReservationId;
+  final String sportCenterId;
+  final String date;
+
+  const CancelRecurringSeriesEvent({
+    required this.recurringReservationId,
+    required this.sportCenterId,
+    required this.date,
+  });
+
+  @override
+  List<Object> get props => [recurringReservationId, sportCenterId, date];
+}
+
+class CancelRecurringDateEvent extends AgendaEvent {
+  final String recurringReservationId;
+  final String sportCenterId;
+  final String date;
+
+  const CancelRecurringDateEvent({
+    required this.recurringReservationId,
+    required this.sportCenterId,
+    required this.date,
+  });
+
+  @override
+  List<Object> get props => [recurringReservationId, sportCenterId, date];
+}

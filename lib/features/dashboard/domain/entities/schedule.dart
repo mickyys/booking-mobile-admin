@@ -26,6 +26,8 @@ class TimeSlot extends Equatable {
   final bool partialPaymentEnabled;
   final int? dayOfWeek;
   final Booking? booking;
+  final bool isRecurringWeekly;
+  final String? recurringReservationId;
 
   const TimeSlot({
     required this.hour,
@@ -37,6 +39,8 @@ class TimeSlot extends Equatable {
     this.partialPaymentEnabled = false,
     this.dayOfWeek,
     this.booking,
+    this.isRecurringWeekly = false,
+    this.recurringReservationId,
   });
 
   TimeSlot copyWith({
@@ -49,6 +53,8 @@ class TimeSlot extends Equatable {
     bool? partialPaymentEnabled,
     int? dayOfWeek,
     Booking? booking,
+    bool? isRecurringWeekly,
+    String? recurringReservationId,
   }) {
     return TimeSlot(
       hour: hour ?? this.hour,
@@ -60,6 +66,8 @@ class TimeSlot extends Equatable {
       partialPaymentEnabled: partialPaymentEnabled ?? this.partialPaymentEnabled,
       dayOfWeek: dayOfWeek ?? this.dayOfWeek,
       booking: booking ?? this.booking,
+      isRecurringWeekly: isRecurringWeekly ?? this.isRecurringWeekly,
+      recurringReservationId: recurringReservationId ?? this.recurringReservationId,
     );
   }
 
@@ -74,6 +82,8 @@ class TimeSlot extends Equatable {
         partialPaymentEnabled,
         dayOfWeek,
         booking,
+        isRecurringWeekly,
+        recurringReservationId,
       ];
 
   bool get isAvailable => status == 'available';

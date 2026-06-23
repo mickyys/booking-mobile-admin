@@ -23,6 +23,17 @@ class AppColors {
   static const Color outline = Color(0xFF5E6977);
   static const Color error = Color(0xFFFFB4AB);
 
+  // Recurring accent colors
+  static const Color recurringWeekly = Color(0xFFFBBF24);
+  static const Color recurringSeries = Color(0xFF10B981);
+
+  // Brand colors
+  static const Color whatsapp = Color(0xFF25D366);
+
+  // Semantic colors
+  static const Color success = Color(0xFF10B981);
+  static const Color warning = Color(0xFFFBBF24);
+
   // Gradients
   static const LinearGradient primaryGradient = LinearGradient(
     colors: [primaryDim, primaryContainer],

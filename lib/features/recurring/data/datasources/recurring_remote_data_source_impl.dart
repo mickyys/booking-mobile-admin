@@ -68,7 +68,7 @@ class RecurringRemoteDataSourceImpl implements RecurringRemoteDataSource {
   @override
   Future<RecurringReservationModel> createRecurringReservation(Map<String, dynamic> data) async {
     try {
-      final response = await dio.post('/admin/recurring-reservations', data: data);
+      final response = await dio.post('/admin/recurring', data: data);
       if (response.statusCode == 201 || response.statusCode == 200) {
         return RecurringReservationModel.fromJson(response.data);
       } else {
@@ -94,7 +94,7 @@ class RecurringRemoteDataSourceImpl implements RecurringRemoteDataSource {
   @override
   Future<void> cancelRecurringReservation(String id) async {
     try {
-      final response = await dio.post('/admin/recurring-reservations/$id/cancel');
+      final response = await dio.delete('/admin/recurring/$id');
       if (response.statusCode != 200) {
         throw Exception('Failed to cancel recurring reservation: ${response.statusCode}');
       }

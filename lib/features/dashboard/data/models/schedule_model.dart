@@ -29,12 +29,33 @@ class TimeSlotModel extends TimeSlot {
     super.partialPaymentEnabled,
     super.dayOfWeek,
     super.booking,
+    super.isRecurringWeekly,
+    super.recurringReservationId,
   });
 
   factory TimeSlotModel.fromJson(Map<String, dynamic> json) {
     final status = (json['status'] ?? 'available').toString();
     final hasBooking = json['booking_id'] != null;
-    print('🏷️ Slot status: $status, booking_id: ${json['booking_id']}');
+    final isRecurring = json['is_recurring_weekly'] == true;
+    final recurringId = json['recurring_reservation_id']?.toString();
+    print('🏷️ Slot status: $status, booking_id: ${json['booking_id']}, recurring: $isRecurring, recurring_id: $recurringId');
+
+    BookingModel? booking;
+    if (hasBooking) {
+      booking = BookingModel.fromJson(json);
+    } else if (isRecurring && recurringId != null && recurringId.isNotEmpty) {
+      booking = BookingModel.fromJson({
+        ...json,
+        'booking_id': recurringId,
+        'id': recurringId,
+      });
+    } else if (status == 'recurring_cancelled' && recurringId != null && recurringId.isNotEmpty) {
+      booking = BookingModel.fromJson({
+        ...json,
+        'booking_id': recurringId,
+        'id': recurringId,
+      });
+    }
 
     return TimeSlotModel(
       hour: json['hour'] ?? 0,
@@ -45,7 +66,9 @@ class TimeSlotModel extends TimeSlot {
       paymentOptional: json['payment_optional'] ?? false,
       partialPaymentEnabled: json['partial_payment_enabled'] ?? false,
       dayOfWeek: json['day_of_week'],
-      booking: hasBooking ? BookingModel.fromJson(json) : null,
+      booking: booking,
+      isRecurringWeekly: isRecurring,
+      recurringReservationId: recurringId,
     );
   }
 }

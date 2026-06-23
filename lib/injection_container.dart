@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:auth0_flutter/auth0_flutter.dart';
 import 'package:reservaloya_admin/core/config/app_config.dart';
@@ -16,6 +14,7 @@ import 'package:reservaloya_admin/features/dashboard/data/datasources/dashboard_
 import 'package:reservaloya_admin/features/dashboard/data/repositories/dashboard_repository_impl.dart';
 import 'package:reservaloya_admin/features/dashboard/domain/usecases/get_dashboard_data_usecase.dart';
 import 'package:reservaloya_admin/features/dashboard/domain/usecases/cancel_booking_usecase.dart';
+import 'package:reservaloya_admin/features/dashboard/domain/usecases/cancel_recurring_date_usecase.dart';
 import 'package:reservaloya_admin/features/dashboard/presentation/bloc/dashboard_bloc.dart';
 import 'package:reservaloya_admin/features/dashboard/presentation/bloc/agenda_bloc.dart';
 import 'package:reservaloya_admin/features/dashboard/domain/usecases/get_agenda_usecase.dart';
@@ -44,7 +43,6 @@ import 'package:dio/dio.dart';
 import 'package:reservaloya_admin/core/utils/auth_interceptor.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:reservaloya_admin/core/usecases/usecase.dart';
 import 'package:reservaloya_admin/features/users/data/datasources/users_remote_data_source.dart';
 import 'package:reservaloya_admin/features/users/data/repositories/users_repository_impl.dart';
 import 'package:reservaloya_admin/features/users/domain/repositories/users_repository.dart';
@@ -126,6 +124,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UpdateCourtUseCase(sl()));
   sl.registerLazySingleton(() => DeleteCourtUseCase(sl()));
   sl.registerLazySingleton(() => CreateInternalBookingUseCase(sl()));
+  sl.registerLazySingleton(() => CancelRecurringDateUseCase(sl()));
   sl.registerLazySingleton(() => UpdateCourtSlotUseCase(sl()));
   sl.registerLazySingleton(() => UpdateCourtScheduleUseCase(sl()));
   sl.registerFactory(() => ScheduleBloc(
@@ -146,6 +145,8 @@ Future<void> init() async {
     createInternalBookingUseCase: sl(),
     cancelBookingUseCase: sl(),
     createRecurringReservationUseCase: sl(),
+    cancelRecurringReservationUseCase: sl(),
+    cancelRecurringDateUseCase: sl(),
   ));
 
   sl.registerLazySingleton(() => GetSportCenterSettingsUseCase(sl()));
@@ -170,6 +171,8 @@ Future<void> init() async {
     cancelRecurringReservationUseCase: sl(),
     deleteSeriesUseCase: sl(),
     createRecurringReservationUseCase: sl(),
+    createInternalBookingUseCase: sl(),
+    getAdminCourtsUseCase: sl(),
   ));
 
   sl.registerLazySingleton<UsersRemoteDataSource>(

@@ -13,6 +13,7 @@ abstract class DashboardRemoteDataSource {
   Future<void> deleteCourt(String courtId);
   Future<BookingModel> createInternalBooking(Map<String, dynamic> bookingData);
   Future<void> cancelBooking(String bookingId);
+  Future<void> cancelRecurringDate(String recurringReservationId, String date);
   Future<void> updateCourtSlot(String courtId, Map<String, dynamic> slotData);
   Future<void> updateCourtSchedule(String courtId, List<Map<String, dynamic>> scheduleData);
   Future<AdminSportCenterModel> getSportCenterSettings(String id);
@@ -189,6 +190,21 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
       final response = await dio.post('/bookings/$bookingId/cancel');
       if (response.statusCode != 200) {
         throw Exception('Failed to cancel booking: ${response.statusCode}');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> cancelRecurringDate(String recurringReservationId, String date) async {
+    try {
+      final response = await dio.post(
+        '/admin/recurring/$recurringReservationId/cancel-date',
+        data: {'date': date},
+      );
+      if (response.statusCode != 200) {
+        throw Exception('Failed to cancel recurring date: ${response.statusCode}');
       }
     } catch (e) {
       rethrow;
