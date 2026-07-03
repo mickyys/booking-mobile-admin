@@ -84,6 +84,8 @@ class _AgendaScreenState extends State<AgendaScreen> {
       text: slot.price.toInt().toString(),
     );
     bool isBlocked = false;
+    String bookingType = 'simple';
+    int weeksCount = 4;
     bool isCreating = false;
     String? nameError;
     String? priceError;
@@ -95,6 +97,9 @@ class _AgendaScreenState extends State<AgendaScreen> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) {
+          final isWeekly = bookingType == 'weekly';
+          final isSeries = bookingType == 'series';
+
           return AlertDialog(
             backgroundColor: AppColors.surfaceHigh,
             insetPadding: const EdgeInsets.symmetric(
@@ -145,114 +150,282 @@ class _AgendaScreenState extends State<AgendaScreen> {
             ),
             content: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(AppRadius.md),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.stadium_outlined,
+                            color: AppColors.primary,
+                            size: 20,
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  courtName,
+                                  style: GoogleFonts.inter(
+                                    color: AppColors.onSurface,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                Text(
+                                  '$hourStr:$minStr',
+                                  style: GoogleFonts.inter(
+                                    color: AppColors.primary,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.stadium_outlined,
-                          color: AppColors.primary,
-                          size: 20,
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                courtName,
-                                style: GoogleFonts.inter(
-                                  color: AppColors.onSurface,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
+                    if (!isBlocked) ...[
+                      const SizedBox(height: AppSpacing.lg),
+                      ModalTextField(
+                        label: 'Nombre Cliente',
+                        icon: Icons.person_outline,
+                        controller: nameController,
+                        required: true,
+                        errorText: nameError,
+                      ),
+                      const SizedBox(height: AppSpacing.base),
+                      ModalTextField(
+                        label: 'Teléfono',
+                        icon: Icons.phone_outlined,
+                        controller: phoneController,
+                        keyboardType: TextInputType.phone,
+                      ),
+                      const SizedBox(height: AppSpacing.base),
+                      ModalTextField(
+                        label: 'Precio',
+                        icon: Icons.attach_money,
+                        controller: priceController,
+                        keyboardType: TextInputType.number,
+                        required: true,
+                        errorText: priceError,
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      ModalSection(
+                        title: 'TIPO DE RESERVA',
+                        icon: Icons.layers_outlined,
+                        child: Column(
+                          children: [
+                            _BookingTypeOption(
+                              icon: Icons.event,
+                              title: 'Reserva Simple',
+                              subtitle: 'Solo para esta fecha',
+                              selected: bookingType == 'simple',
+                              accentColor: AppColors.primary,
+                              onTap: () => setDialogState(
+                                  () => bookingType = 'simple'),
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            _BookingTypeOption(
+                              icon: Icons.repeat,
+                              title: 'Reserva Recurrente',
+                              subtitle: 'Se repite por varias semanas',
+                              selected: bookingType == 'series',
+                              accentColor: AppColors.recurringSeries,
+                              badge: weeksCount >= 2
+                                  ? '$weeksCount semanas'
+                                  : null,
+                              onTap: () => setDialogState(
+                                  () => bookingType = 'series'),
+                            ),
+                            if (isSeries) ...[
+                              const SizedBox(height: AppSpacing.md),
+                              Container(
+                                padding: const EdgeInsets.all(AppSpacing.md),
+                                decoration: BoxDecoration(
+                                  color: AppColors.recurringSeries
+                                      .withOpacity(0.1),
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.md),
+                                  border: Border.all(
+                                    color: AppColors.recurringSeries
+                                        .withOpacity(0.2),
+                                  ),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Cantidad de semanas',
+                                          style: GoogleFonts.inter(
+                                            color: AppColors.recurringSeries,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.recurringSeries,
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                          ),
+                                          child: Text(
+                                            '$weeksCount',
+                                            style: GoogleFonts.manrope(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 18,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    SliderTheme(
+                                      data: SliderThemeData(
+                                        activeTrackColor:
+                                            AppColors.recurringSeries,
+                                        inactiveTrackColor: AppColors
+                                            .recurringSeries
+                                            .withOpacity(0.2),
+                                        thumbColor:
+                                            AppColors.recurringSeries,
+                                        overlayColor: AppColors
+                                            .recurringSeries
+                                            .withOpacity(0.15),
+                                        trackHeight: 6,
+                                        thumbShape:
+                                            const RoundSliderThumbShape(
+                                          enabledThumbRadius: 8,
+                                        ),
+                                      ),
+                                      child: Slider(
+                                        value: weeksCount.toDouble(),
+                                        min: 2,
+                                        max: 52,
+                                        divisions: 50,
+                                        onChanged: (v) => setDialogState(
+                                            () => weeksCount = v.round()),
+                                      ),
+                                    ),
+                                    Text(
+                                      'Hasta el ${DateFormat("d 'de' MMMM", 'es').format(_selectedDate.add(Duration(days: (weeksCount - 1) * 7)))}',
+                                      style: GoogleFonts.inter(
+                                        color: AppColors.recurringSeries,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              Text(
-                                '$hourStr:$minStr',
-                                style: GoogleFonts.inter(
-                                  color: AppColors.primary,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
+                            ],
+                            const SizedBox(height: AppSpacing.sm),
+                            _BookingTypeOption(
+                              icon: Icons.loop,
+                              title: 'Reserva Semanal',
+                              subtitle:
+                                  'Se repite cada semana de forma indefinida',
+                              selected: bookingType == 'weekly',
+                              accentColor: AppColors.recurringWeekly,
+                              onTap: () => setDialogState(
+                                  () => bookingType = 'weekly'),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (isWeekly) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          decoration: BoxDecoration(
+                            color: AppColors.recurringWeekly.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                            border: Border.all(
+                              color: AppColors.recurringWeekly.withOpacity(0.2),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.loop,
+                                color: AppColors.recurringWeekly,
+                                size: 20,
+                              ),
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
+                                child: Text(
+                                  'El horario se reservará cada ${DateFormat('EEEE', 'es').format(_selectedDate)} a las $hourStr:$minStr de forma indefinida.',
+                                  style: GoogleFonts.inter(
+                                    color: AppColors.recurringWeekly,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                               ),
                             ],
                           ),
                         ),
                       ],
-                    ),
-                  ),
-                  if (!isBlocked) ...[
-                    const SizedBox(height: AppSpacing.lg),
-                    ModalTextField(
-                      label: 'Nombre Cliente',
-                      icon: Icons.person_outline,
-                      controller: nameController,
-                      required: true,
-                      errorText: nameError,
-                    ),
-                    const SizedBox(height: AppSpacing.base),
-                    ModalTextField(
-                      label: 'Teléfono',
-                      icon: Icons.phone_outlined,
-                      controller: phoneController,
-                      keyboardType: TextInputType.phone,
-                    ),
-                    const SizedBox(height: AppSpacing.base),
-                    ModalTextField(
-                      label: 'Precio',
-                      icon: Icons.attach_money,
-                      controller: priceController,
-                      keyboardType: TextInputType.number,
-                      required: true,
-                      errorText: priceError,
-                    ),
-                  ] else ...[
-                    const SizedBox(height: AppSpacing.lg),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      decoration: BoxDecoration(
-                        color: AppColors.error.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                        border: Border.all(
-                          color: AppColors.error.withOpacity(0.2),
+                    ] else ...[
+                      const SizedBox(height: AppSpacing.lg),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        decoration: BoxDecoration(
+                          color: AppColors.error.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          border: Border.all(
+                            color: AppColors.error.withOpacity(0.2),
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            const Icon(
+                              Icons.block,
+                              color: AppColors.error,
+                              size: 40,
+                            ),
+                            const SizedBox(height: AppSpacing.base),
+                            Text(
+                              'Este horario quedará marcado como bloqueado\ny no estará disponible para reservas externas.',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                color: AppColors.onSurfaceVariant,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      child: Column(
-                        children: [
-                          const Icon(
-                            Icons.block,
-                            color: AppColors.error,
-                            size: 40,
-                          ),
-                          const SizedBox(height: AppSpacing.base),
-                          Text(
-                            'Este horario quedará marcado como bloqueado\ny no estará disponible para reservas externas.',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.inter(
-                              color: AppColors.onSurfaceVariant,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
             actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             actions: [
               TextButton(
-                onPressed: isCreating ? null : () => Navigator.pop(dialogContext),
+                onPressed: isCreating
+                    ? null
+                    : () => Navigator.pop(dialogContext),
                 child: Text(
                   'Cancelar',
                   style: GoogleFonts.inter(
@@ -267,10 +440,16 @@ class _AgendaScreenState extends State<AgendaScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: isBlocked
                       ? AppColors.error
-                      : AppColors.primary,
+                      : isWeekly
+                          ? AppColors.recurringWeekly
+                          : isSeries
+                              ? AppColors.recurringSeries
+                              : AppColors.primary,
                   foregroundColor: isBlocked
                       ? Colors.white
-                      : AppColors.onPrimary,
+                      : isWeekly
+                          ? Colors.black
+                          : AppColors.onPrimary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadius.md),
                   ),
@@ -309,31 +488,78 @@ class _AgendaScreenState extends State<AgendaScreen> {
 
                         final dateStr =
                             DateFormat('yyyy-MM-dd').format(_selectedDate);
-                        final Map<String, dynamic> bookingData = {
-                          'court_id': courtId,
-                          'sport_center_id': _selectedSportCenterId,
-                          'date': '${dateStr}T12:00:00.000Z',
-                          'hour': slot.hour,
-                          'minutes': slot.minutes,
-                          'price': isBlocked
-                              ? 0.0
-                              : (double.tryParse(priceController.text) ??
-                                  slot.price),
-                          'payment_method': 'internal',
-                        };
 
                         if (isBlocked) {
-                          bookingData['customer_name'] = 'BLOQUEADO';
+                          final Map<String, dynamic> bookingData = {
+                            'court_id': courtId,
+                            'sport_center_id': _selectedSportCenterId,
+                            'date': '${dateStr}T12:00:00.000Z',
+                            'hour': slot.hour,
+                            'minutes': slot.minutes,
+                            'price': 0.0,
+                            'payment_method': 'internal',
+                            'customer_name': 'BLOQUEADO',
+                          };
+                          context.read<AgendaBloc>().add(
+                            CreateInternalBookingEvent(
+                                bookingData: bookingData),
+                          );
+                        } else if (isWeekly) {
+                          final Map<String, dynamic> bookingData = {
+                            'court_id': courtId,
+                            'sport_center_id': _selectedSportCenterId,
+                            'date': dateStr,
+                            'hour': slot.hour,
+                            'minutes': slot.minutes,
+                            'price': double.tryParse(
+                                    priceController.text) ??
+                                slot.price,
+                            'customer_name': nameController.text.trim(),
+                            'customer_phone': phoneController.text.trim(),
+                          };
+                          context.read<AgendaBloc>().add(
+                            CreateRecurringReservationEvent(
+                                bookingData: bookingData),
+                          );
+                        } else if (isSeries) {
+                          final Map<String, dynamic> bookingData = {
+                            'court_id': courtId,
+                            'sport_center_id': _selectedSportCenterId,
+                            'date': '${dateStr}T12:00:00.000Z',
+                            'hour': slot.hour,
+                            'minutes': slot.minutes,
+                            'price': double.tryParse(
+                                    priceController.text) ??
+                                slot.price,
+                            'customer_name': nameController.text.trim(),
+                            'customer_phone': phoneController.text.trim(),
+                          };
+                          context.read<AgendaBloc>().add(
+                            CreateSeriesBookingsEvent(
+                              bookingData: bookingData,
+                              weeksCount: weeksCount,
+                            ),
+                          );
                         } else {
-                          bookingData['customer_name'] = nameController.text;
-                          bookingData['customer_phone'] =
-                              phoneController.text;
+                          final Map<String, dynamic> bookingData = {
+                            'court_id': courtId,
+                            'sport_center_id': _selectedSportCenterId,
+                            'date': '${dateStr}T12:00:00.000Z',
+                            'hour': slot.hour,
+                            'minutes': slot.minutes,
+                            'price': double.tryParse(
+                                    priceController.text) ??
+                                slot.price,
+                            'payment_method': 'internal',
+                            'customer_name': nameController.text.trim(),
+                            'customer_phone': phoneController.text.trim(),
+                          };
+                          context.read<AgendaBloc>().add(
+                            CreateInternalBookingEvent(
+                                bookingData: bookingData),
+                          );
                         }
 
-                        context.read<AgendaBloc>().add(
-                          CreateInternalBookingEvent(
-                              bookingData: bookingData),
-                        );
                         Navigator.pop(dialogContext);
                       },
                 child: isCreating
@@ -345,7 +571,18 @@ class _AgendaScreenState extends State<AgendaScreen> {
                           color: AppColors.onPrimary,
                         ),
                       )
-                    : Text(isBlocked ? 'Bloquear' : 'Reservar'),
+                    : Text(
+                        isBlocked
+                            ? 'Bloquear'
+                            : isWeekly
+                                ? 'Crear Semanal'
+                                : isSeries
+                                    ? '$weeksCount Semanas'
+                                    : 'Confirmar',
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
               ),
             ],
           );
@@ -755,6 +992,57 @@ class _AgendaScreenState extends State<AgendaScreen> {
     );
   }
 
+  void _showErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surfaceHigh,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+        ),
+        title: Row(
+          children: [
+            const Icon(Icons.error_outline, color: AppColors.error, size: 28),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Text(
+                'Error',
+                style: GoogleFonts.manrope(
+                  color: AppColors.onSurface,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          message,
+          style: GoogleFonts.inter(
+            color: AppColors.onSurfaceVariant,
+            fontSize: 14,
+          ),
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.onPrimary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+            ),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Entendido',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   String? _formatPhoneForWhatsApp(String phone) {
     if (phone.isEmpty) return null;
 
@@ -857,12 +1145,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
             ),
           );
         } else if (state is AgendaError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.error,
-            ),
-          );
+          _showErrorDialog(context, state.message);
         }
       },
       child: Scaffold(
@@ -1493,5 +1776,98 @@ class _AgendaScreenState extends State<AgendaScreen> {
           ),
         );
     }
+  }
+}
+
+class _BookingTypeOption extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool selected;
+  final VoidCallback onTap;
+  final String? badge;
+  final Color accentColor;
+
+  const _BookingTypeOption({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.selected,
+    required this.onTap,
+    this.badge,
+    required this.accentColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bgColor = selected
+        ? accentColor.withOpacity(0.12)
+        : AppColors.surfaceHighest.withOpacity(0.5);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(
+            color: selected ? accentColor : Colors.transparent,
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: selected ? accentColor : AppColors.onSurfaceVariant,
+              size: 20,
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.onSurface,
+                      fontSize: 14,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.inter(
+                      color: AppColors.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (badge != null && selected)
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: accentColor,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  badge!,
+                  style: GoogleFonts.inter(
+                    color: accentColor == AppColors.recurringWeekly
+                        ? Colors.black
+                        : Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
   }
 }

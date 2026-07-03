@@ -12,6 +12,7 @@ abstract class DashboardRemoteDataSource {
   Future<void> updateCourt(String courtId, String name, String description);
   Future<void> deleteCourt(String courtId);
   Future<BookingModel> createInternalBooking(Map<String, dynamic> bookingData);
+  Future<List<BookingModel>> createBatchBookings(List<Map<String, dynamic>> bookings, {String? seriesId});
   Future<void> cancelBooking(String bookingId);
   Future<void> cancelRecurringDate(String recurringReservationId, String date);
   Future<void> updateCourtSlot(String courtId, Map<String, dynamic> slotData);
@@ -179,6 +180,41 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
       } else {
         throw Exception('Failed to create booking: ${response.statusCode}');
       }
+    } on DioException catch (e) {
+      final errorData = e.response?.data;
+      if (errorData is Map && errorData.containsKey('error')) {
+        throw Exception(errorData['error'].toString());
+      }
+      rethrow;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<BookingModel>> createBatchBookings(List<Map<String, dynamic>> bookings, {String? seriesId}) async {
+    try {
+      final body = <String, dynamic>{
+        'bookings': bookings,
+      };
+      if (seriesId != null) {
+        body['series_id'] = seriesId;
+      }
+      print('🚀 POST /admin/bookings/internal/batch body: $body');
+      final response = await dio.post('/admin/bookings/internal/batch', data: body);
+      print('📬 Batch booking response: ${response.statusCode} - ${response.data}');
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final List<dynamic> bookingsList = response.data['bookings'] ?? [];
+        return bookingsList.map((e) => BookingModel.fromJson(e)).toList();
+      } else {
+        throw Exception('Failed to create batch bookings: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      final errorData = e.response?.data;
+      if (errorData is Map && errorData.containsKey('error')) {
+        throw Exception(errorData['error'].toString());
+      }
+      rethrow;
     } catch (e) {
       rethrow;
     }

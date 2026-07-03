@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:dio/dio.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/booking.dart';
 import '../../domain/entities/schedule.dart';
@@ -79,7 +80,17 @@ class DashboardRepositoryImpl implements DashboardRepository {
       final data = await remoteDataSource.createInternalBooking(bookingData);
       return Right(data);
     } catch (e) {
-      return const Left(ServerFailure('Error al crear la reserva interna.'));
+      return Left(ServerFailure(_extractErrorMessage(e)));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Booking>>> createBatchBookings(List<Map<String, dynamic>> bookings, {String? seriesId}) async {
+    try {
+      final data = await remoteDataSource.createBatchBookings(bookings, seriesId: seriesId);
+      return Right(data);
+    } catch (e) {
+      return Left(ServerFailure(_extractErrorMessage(e)));
     }
   }
 
@@ -170,5 +181,28 @@ class DashboardRepositoryImpl implements DashboardRepository {
     } catch (e) {
       return const Left(ServerFailure('Error al actualizar la configuración.'));
     }
+  }
+
+  String _extractErrorMessage(Object e) {
+    String msg;
+    if (e is DioException) {
+      final errorData = e.response?.data;
+      if (errorData is Map && errorData.containsKey('error')) {
+        msg = errorData['error'].toString();
+      } else {
+        msg = e.message ?? e.toString();
+      }
+    } else {
+      msg = e.toString();
+    }
+    return _sanitize(msg);
+  }
+
+  String _sanitize(String msg) {
+    msg = msg
+        .replaceFirst(RegExp(r'^Exception:\s*', caseSensitive: false), '')
+        .replaceFirst(RegExp(r'^Exception\s*', caseSensitive: false), '');
+    if (msg.isEmpty) return msg;
+    return msg[0].toUpperCase() + msg.substring(1);
   }
 }

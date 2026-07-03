@@ -70,10 +70,20 @@ class RecurringRemoteDataSourceImpl implements RecurringRemoteDataSource {
     try {
       final response = await dio.post('/admin/recurring', data: data);
       if (response.statusCode == 201 || response.statusCode == 200) {
+        if (response.data is Map && (response.data as Map).containsKey('error')) {
+          final errorMsg = (response.data as Map)['error'] ?? 'Error desconocido';
+          throw Exception(errorMsg.toString());
+        }
         return RecurringReservationModel.fromJson(response.data);
       } else {
         throw Exception('Failed to create recurring reservation: ${response.statusCode}');
       }
+    } on DioException catch (e) {
+      final errorData = e.response?.data;
+      if (errorData is Map && errorData.containsKey('error')) {
+        throw Exception(errorData['error'].toString());
+      }
+      rethrow;
     } catch (e) {
       rethrow;
     }

@@ -38,6 +38,11 @@ class CreateSeriesBooking extends RecurringEvent {
   const CreateSeriesBooking(this.data);
 }
 
+class CreateWeeklyRecurring extends RecurringEvent {
+  final Map<String, dynamic> data;
+  const CreateWeeklyRecurring(this.data);
+}
+
 // States
 abstract class RecurringState {}
 class RecurringInitial extends RecurringState {}
@@ -71,6 +76,7 @@ class RecurringBloc extends Bloc<RecurringEvent, RecurringState> {
     on<DeleteSeries>(_onDelete);
     on<CreateSimpleBooking>(_onCreateSimpleBooking);
     on<CreateSeriesBooking>(_onCreateSeriesBooking);
+    on<CreateWeeklyRecurring>(_onCreateWeeklyRecurring);
   }
 
   Future<void> _onLoad(LoadRecurringSeries event, Emitter<RecurringState> emit) async {
@@ -89,7 +95,7 @@ class RecurringBloc extends Bloc<RecurringEvent, RecurringState> {
       );
       emit(RecurringLoaded(series, courts: courts));
     } catch (e) {
-      emit(RecurringError(e.toString()));
+      emit(RecurringError(_sanitizeError(e)));
     }
   }
 
@@ -99,7 +105,7 @@ class RecurringBloc extends Bloc<RecurringEvent, RecurringState> {
       emit(RecurringActionSuccess(message: 'Reserva cancelada'));
       add(LoadRecurringSeries());
     } catch (e) {
-      emit(RecurringError(e.toString()));
+      emit(RecurringError(_sanitizeError(e)));
     }
   }
 
@@ -109,29 +115,58 @@ class RecurringBloc extends Bloc<RecurringEvent, RecurringState> {
       emit(RecurringActionSuccess(message: 'Serie eliminada'));
       add(LoadRecurringSeries());
     } catch (e) {
-      emit(RecurringError(e.toString()));
+      emit(RecurringError(_sanitizeError(e)));
     }
   }
 
   Future<void> _onCreateSimpleBooking(CreateSimpleBooking event, Emitter<RecurringState> emit) async {
     emit(RecurringLoading());
-    try {
-      await createInternalBookingUseCase(event.data);
-      emit(RecurringActionSuccess(message: 'Reserva creada con éxito'));
-      add(LoadRecurringSeries());
-    } catch (e) {
-      emit(RecurringError('Error al crear reserva: ${e.toString()}'));
-    }
+    final result = await createInternalBookingUseCase(event.data);
+    result.fold(
+      (failure) {
+        emit(RecurringError('Error al crear reserva: ${failure.message}'));
+        add(LoadRecurringSeries());
+      },
+      (_) {
+        emit(RecurringActionSuccess(message: 'Reserva creada con éxito'));
+        add(LoadRecurringSeries());
+      },
+    );
   }
 
   Future<void> _onCreateSeriesBooking(CreateSeriesBooking event, Emitter<RecurringState> emit) async {
     emit(RecurringLoading());
+    final result = await createInternalBookingUseCase(event.data);
+    result.fold(
+      (failure) {
+        emit(RecurringError('Error al crear reserva: ${failure.message}'));
+        add(LoadRecurringSeries());
+      },
+      (_) {
+        emit(RecurringActionSuccess(message: 'Reserva creada con éxito'));
+        add(LoadRecurringSeries());
+      },
+    );
+  }
+
+  Future<void> _onCreateWeeklyRecurring(CreateWeeklyRecurring event, Emitter<RecurringState> emit) async {
+    emit(RecurringLoading());
     try {
-      await createInternalBookingUseCase(event.data);
-      emit(RecurringActionSuccess(message: 'Reserva creada con éxito'));
+      await createRecurringReservationUseCase(event.data);
+      emit(RecurringActionSuccess(message: 'Reserva semanal creada con éxito'));
       add(LoadRecurringSeries());
     } catch (e) {
-      emit(RecurringError('Error al crear reserva: ${e.toString()}'));
+      emit(RecurringError('Error al crear reserva semanal: ${_sanitizeError(e)}'));
+      add(LoadRecurringSeries());
     }
+  }
+
+  String _sanitizeError(Object e) {
+    String msg = e.toString();
+    msg = msg
+        .replaceFirst(RegExp(r'^Exception:\s*', caseSensitive: false), '')
+        .replaceFirst(RegExp(r'^Exception\s*', caseSensitive: false), '');
+    if (msg.isEmpty) return msg;
+    return msg[0].toUpperCase() + msg.substring(1);
   }
 }

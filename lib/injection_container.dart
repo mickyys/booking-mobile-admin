@@ -23,6 +23,7 @@ import 'package:reservaloya_admin/features/dashboard/domain/usecases/add_court_u
 import 'package:reservaloya_admin/features/dashboard/domain/usecases/update_court_usecase.dart';
 import 'package:reservaloya_admin/features/dashboard/domain/usecases/delete_court_usecase.dart';
 import 'package:reservaloya_admin/features/dashboard/domain/usecases/create_internal_booking_usecase.dart';
+import 'package:reservaloya_admin/features/dashboard/domain/usecases/create_batch_bookings_usecase.dart';
 import 'package:reservaloya_admin/features/dashboard/domain/repositories/dashboard_repository.dart';
 import 'package:reservaloya_admin/features/dashboard/domain/usecases/get_sport_center_settings_usecase.dart';
 import 'package:reservaloya_admin/features/dashboard/domain/usecases/update_sport_center_usecase.dart';
@@ -124,6 +125,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UpdateCourtUseCase(sl()));
   sl.registerLazySingleton(() => DeleteCourtUseCase(sl()));
   sl.registerLazySingleton(() => CreateInternalBookingUseCase(sl()));
+  sl.registerLazySingleton(() => CreateBatchBookingsUseCase(sl()));
   sl.registerLazySingleton(() => CancelRecurringDateUseCase(sl()));
   sl.registerLazySingleton(() => UpdateCourtSlotUseCase(sl()));
   sl.registerLazySingleton(() => UpdateCourtScheduleUseCase(sl()));
@@ -147,6 +149,7 @@ Future<void> init() async {
     createRecurringReservationUseCase: sl(),
     cancelRecurringReservationUseCase: sl(),
     cancelRecurringDateUseCase: sl(),
+    createBatchBookingsUseCase: sl(),
   ));
 
   sl.registerLazySingleton(() => GetSportCenterSettingsUseCase(sl()));

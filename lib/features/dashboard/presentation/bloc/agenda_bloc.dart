@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../../domain/entities/schedule.dart';
@@ -9,6 +10,7 @@ import '../../domain/usecases/delete_court_usecase.dart';
 import '../../domain/usecases/create_internal_booking_usecase.dart';
 import '../../domain/usecases/cancel_booking_usecase.dart';
 import '../../domain/usecases/cancel_recurring_date_usecase.dart';
+import '../../domain/usecases/create_batch_bookings_usecase.dart';
 import '../../../recurring/domain/usecases/create_recurring_reservation_usecase.dart';
 import '../../../recurring/domain/usecases/cancel_recurring_reservation_usecase.dart';
 import 'agenda_event.dart';
@@ -25,6 +27,7 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
   final CreateRecurringReservationUseCase createRecurringReservationUseCase;
   final CancelRecurringReservationUseCase cancelRecurringReservationUseCase;
   final CancelRecurringDateUseCase cancelRecurringDateUseCase;
+  final CreateBatchBookingsUseCase createBatchBookingsUseCase;
 
   AgendaBloc({
     required this.getAgendaUseCase,
@@ -37,6 +40,7 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
     required this.createRecurringReservationUseCase,
     required this.cancelRecurringReservationUseCase,
     required this.cancelRecurringDateUseCase,
+    required this.createBatchBookingsUseCase,
   }) : super(AgendaInitial()) {
     on<LoadAdminCourts>(_onLoadAdminCourts);
     on<LoadAgendaData>(_onLoadAgendaData);
@@ -47,6 +51,7 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
     on<CreateInternalBookingEvent>(_onCreateInternalBooking);
     on<CancelBookingEvent>(_onCancelBooking);
     on<CreateRecurringReservationEvent>(_onCreateRecurringReservation);
+    on<CreateSeriesBookingsEvent>(_onCreateSeriesBookings);
     on<CancelRecurringSeriesEvent>(_onCancelRecurringSeries);
     on<CancelRecurringDateEvent>(_onCancelRecurringDate);
   }
@@ -167,6 +172,11 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
       (failure) {
         print('❌ Booking error: ${failure.message}');
         emit(AgendaError(message: failure.message));
+        final dateStr = event.bookingData['date'].toString().split('T')[0];
+        add(LoadAgendaData(
+          sportCenterId: event.bookingData['sport_center_id'],
+          date: dateStr,
+        ));
       },
       (_) {
         print('✅ Booking created successfully');
@@ -185,7 +195,10 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
     emit(AgendaLoading());
     final result = await cancelBookingUseCase(event.bookingId);
     result.fold(
-      (failure) => emit(AgendaError(message: failure.message)),
+      (failure) {
+        emit(AgendaError(message: failure.message));
+        add(LoadAgendaData(sportCenterId: event.sportCenterId, date: event.date));
+      },
       (_) {
         emit(const CourtActionSuccess(message: 'Reserva cancelada con éxito'));
         add(LoadAgendaData(sportCenterId: event.sportCenterId, date: event.date));
@@ -207,8 +220,57 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
       ));
     } catch (e) {
       print('❌ Recurring reservation error: $e');
-      emit(AgendaError(message: e.toString()));
+      emit(AgendaError(message: _sanitizeError(e)));
+      final dateStr = event.bookingData['date'].toString();
+      add(LoadAgendaData(
+        sportCenterId: event.bookingData['sport_center_id'],
+        date: dateStr,
+      ));
     }
+  }
+
+  Future<void> _onCreateSeriesBookings(CreateSeriesBookingsEvent event, Emitter<AgendaState> emit) async {
+    print('📅 Creating series of ${event.weeksCount} bookings via batch: ${event.bookingData}');
+    emit(AgendaLoading());
+    final baseDate = DateTime.parse(event.bookingData['date']);
+    final seriesId = 'SERIE-${Random().nextInt(999999).toString().padLeft(6, '0')}';
+    final sportCenterId = event.bookingData['sport_center_id'];
+
+    final bookings = <Map<String, dynamic>>[];
+    for (int i = 0; i < event.weeksCount; i++) {
+      final currentDate = baseDate.add(Duration(days: i * 7));
+      final dateStr = '${currentDate.toIso8601String().split('T')[0]}T12:00:00.000Z';
+
+      final bookingData = Map<String, dynamic>.from(event.bookingData);
+      bookingData['date'] = dateStr;
+      bookingData.remove('sport_center_id');
+      bookingData['guest_details'] = {
+        'name': event.bookingData['customer_name'] ?? '',
+        'phone': event.bookingData['customer_phone'] ?? '',
+        'email': 'admin@internal.com',
+      };
+      bookingData['status'] = 'confirmed';
+      bookingData['payment_method'] = 'internal';
+      bookings.add(bookingData);
+    }
+
+    final result = await createBatchBookingsUseCase(
+      BatchBookingsParams(bookings: bookings, seriesId: seriesId),
+    );
+    result.fold(
+      (failure) {
+        print('❌ Batch series error: ${failure.message}');
+        emit(AgendaError(message: failure.message));
+        final loadDate = event.bookingData['date'].toString().split('T')[0];
+        add(LoadAgendaData(sportCenterId: sportCenterId, date: loadDate));
+      },
+      (_) {
+        print('✅ Series of ${event.weeksCount} bookings created via batch');
+        final loadDate = event.bookingData['date'].toString().split('T')[0];
+        emit(CourtActionSuccess(message: '${event.weeksCount} reservas creadas'));
+        add(LoadAgendaData(sportCenterId: sportCenterId, date: loadDate));
+      },
+    );
   }
 
   Future<void> _onCancelRecurringSeries(CancelRecurringSeriesEvent event, Emitter<AgendaState> emit) async {
@@ -220,7 +282,8 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
       add(LoadAgendaData(sportCenterId: event.sportCenterId, date: event.date));
     } catch (e) {
       print('❌ Cancel recurring series error: $e');
-      emit(AgendaError(message: e.toString()));
+      emit(AgendaError(message: _sanitizeError(e)));
+      add(LoadAgendaData(sportCenterId: event.sportCenterId, date: event.date));
     }
   }
 
@@ -230,11 +293,23 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
       CancelRecurringDateParams(recurringReservationId: event.recurringReservationId, date: event.date),
     );
     result.fold(
-      (failure) => emit(AgendaError(message: failure.message)),
+      (failure) {
+        emit(AgendaError(message: failure.message));
+        add(LoadAgendaData(sportCenterId: event.sportCenterId, date: event.date));
+      },
       (_) {
         emit(const CourtActionSuccess(message: 'Fecha cancelada de la serie recurrente'));
         add(LoadAgendaData(sportCenterId: event.sportCenterId, date: event.date));
       },
     );
+  }
+
+  String _sanitizeError(Object e) {
+    String msg = e.toString();
+    msg = msg
+        .replaceFirst(RegExp(r'^Exception:\s*', caseSensitive: false), '')
+        .replaceFirst(RegExp(r'^Exception\s*', caseSensitive: false), '');
+    if (msg.isEmpty) return msg;
+    return msg[0].toUpperCase() + msg.substring(1);
   }
 }

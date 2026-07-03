@@ -64,11 +64,52 @@ class _RecurringScreenState extends State<RecurringScreen> {
               ),
             );
           } else if (state is RecurringError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppColors.error,
-                behavior: SnackBarBehavior.floating,
+            showDialog(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                backgroundColor: AppColors.surfaceHigh,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.xl),
+                ),
+                title: Row(
+                  children: [
+                    const Icon(Icons.error_outline, color: AppColors.error, size: 28),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Text(
+                        'Error',
+                        style: GoogleFonts.manrope(
+                          color: AppColors.onSurface,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                content: Text(
+                  state.message,
+                  style: GoogleFonts.inter(
+                    color: AppColors.onSurfaceVariant,
+                    fontSize: 14,
+                  ),
+                ),
+                actions: [
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: AppColors.onPrimary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                      ),
+                    ),
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text(
+                      'Entendido',
+                      style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
               ),
             );
           }
@@ -999,7 +1040,7 @@ class _RecurringScreenState extends State<RecurringScreen> {
                             .format(selectedDate);
 
                         if (bookingType == 'weekly') {
-                          bloc.add(CreateSimpleBooking({
+                          bloc.add(CreateWeeklyRecurring({
                             'court_id': selectedCourtId,
                             'customer_name':
                                 nameController.text.trim(),
