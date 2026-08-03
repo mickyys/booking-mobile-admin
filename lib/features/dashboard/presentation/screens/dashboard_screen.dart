@@ -787,8 +787,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     switch (method.toLowerCase()) {
       case 'mercadopago':
         return 'MercadoPago';
-      case 'fintoc':
-        return 'Fintoc';
       case 'flow':
         return 'Flow';
       case 'presential':
@@ -813,10 +811,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case 'mercadopago':
         color = Colors.blue;
         text = 'MERCADO PAGO';
-        break;
-      case 'fintoc':
-        color = Colors.indigo;
-        text = 'FINTOC';
         break;
       case 'flow':
         color = Colors.purple;

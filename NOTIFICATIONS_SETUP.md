@@ -106,7 +106,7 @@ El dispositivo se registra automáticamente después del login exitoso:
 El backend envía notificaciones en los siguientes casos:
 
 1. **Nueva Reserva** - Cuando un cliente reserva una cancha
-2. **Pago Confirmado** - Cuando se confirma el pago (Fintoc/MercadoPago)
+2. **Pago Confirmado** - Cuando se confirma el pago (MercadoPago)
 3. **Reserva Cancelada** - Cuando se cancela una reserva
 
 ### 📱 Estructura del Payload

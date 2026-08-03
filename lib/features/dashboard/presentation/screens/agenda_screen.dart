@@ -1114,8 +1114,6 @@ class _AgendaScreenState extends State<AgendaScreen> {
     switch (method.toLowerCase()) {
       case 'mercadopago':
         return 'MercadoPago';
-      case 'fintoc':
-        return 'Fintoc';
       case 'flow':
         return 'Flow';
       case 'presential':

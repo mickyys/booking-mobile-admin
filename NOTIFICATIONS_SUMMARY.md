@@ -116,7 +116,7 @@ Backend envía FCM
 ### 3. **Tipos de Notificaciones** (Backend)
 El backend envía notificaciones cuando:
 - ✅ Nueva reserva creada
-- ✅ Pago confirmado (Fintoc/MercadoPago)
+- ✅ Pago confirmado (MercadoPago)
 - ✅ Reserva cancelada
 
 ---
